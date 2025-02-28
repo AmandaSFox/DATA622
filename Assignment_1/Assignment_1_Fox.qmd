@@ -1,0 +1,156 @@
+---
+title: "DATA_622_Project_1"
+author: "Fox"
+date: "3/2/2025"
+format: html
+---
+
+This assignment focuses on **Exploratory Data Analysis (EDA)**, one of the most important steps in data science. Surveys show data scientists spend 60-80% of their time on data prep, and EDA helps ***identify data gaps, improve quality, and shape better features*** — all leading to better models.
+
+The dataset comes from a study by Moro, Cortez, and Rita conducted between 2008 and 2013, where they analyzed telemarketing data from a Portuguese bank to predict the success of selling long-term deposits. The research team applied feature selection and modeling techniques, ultimately comparing logistic regression, decision trees, neural networks, and support vector machines to find the best predictive model. 
+
+For this EDA, I’m using a pre-processed, published version of that dataset, which has a reduced number of features.
+
+```{r libraries, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(purrr)
+library(reshape2)
+#library(corrplot)
+library(GGally)
+```
+
+1. Dataset Overview
+The dataset contains r nrow(df) records and r ncol(df) columns. It consists of bank customers who were contacted as part of a marketing campaign to promote a special deposit account. The features describe customer demographics, financial history, and prior interactions with the bank’s marketing efforts.
+
+The goal of this analysis is to review the dataset for data quality, assess variable distributions, and identify any initial patterns or relationships that may help predict customer interest in the deposit account.
+
+2. Structure & Initial Review
+{r
+Copy
+Edit
+glimpse(df)
+summary(df)
+The dataset is extremely clean, with all variables correctly typed (numeric or categorical). There are no missing values, and the data appears pre-processed.
+
+3. Univariate Analysis - Individual Variable Distributions
+3.1 Categorical Variables
+The distribution of each categorical variable was reviewed to check for class imbalance.
+
+{r
+Copy
+Edit
+categorical_cols <- df %>% select(where(is.character)) %>% names()
+
+for (cat in categorical_cols) {
+  cat_table <- df %>%
+    count(.data[[cat]]) %>%
+    mutate(percent = (n / sum(n)) * 100)
+  
+  print(cat_table)
+  
+  ggplot(df, aes_string(x = cat, fill = cat)) +
+    geom_bar() +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = paste("Distribution of", cat)) %>%
+    print()
+}
+3.2 Numeric Variables
+Summary statistics for numeric variables show central tendency, spread, and possible outliers.
+
+{r
+Copy
+Edit
+numeric_cols <- df %>% select(where(is.numeric)) %>% names()
+
+for (num in numeric_cols) {
+  summary_stats <- df %>%
+    summarise(min = min(.data[[num]], na.rm = TRUE),
+              mean = mean(.data[[num]], na.rm = TRUE),
+              median = median(.data[[num]], na.rm = TRUE),
+              max = max(.data[[num]], na.rm = TRUE),
+              sd = sd(.data[[num]], na.rm = TRUE))
+  
+  print(paste("Summary for", num))
+  print(summary_stats)
+}
+4. Relationships Between Variables
+4.1 Numeric vs Numeric - Correlation Analysis
+A correlation matrix was computed to identify relationships between numeric features.
+
+{r
+Copy
+Edit
+cor_matrix <- cor(df %>% select(where(is.numeric)), use = "pairwise.complete.obs")
+cor_matrix
+No numeric pairs exhibited strong correlation (all below 0.5). This confirms that numeric features like age, balance, and contact count are relatively independent, with no clear linear relationships between them.
+
+4.2 Numeric vs Categorical - Boxplots
+Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.
+
+{r
+Copy
+Edit
+for (cat in categorical_cols) {
+  for (num in numeric_cols) {
+    ggplot(df, aes_string(x = cat, y = num)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+      labs(title = paste(num, "by", cat)) %>%
+      print()
+  }
+}
+4.3 Categorical vs Categorical - Stacked Bar Charts
+Relationships between categorical variables were visualized using stacked bar charts.
+
+{r
+Copy
+Edit
+if (length(categorical_cols) > 1) {
+  for (i in 1:(length(categorical_cols) - 1)) {
+    for (j in (i + 1):length(categorical_cols)) {
+      cat1 <- categorical_cols[i]
+      cat2 <- categorical_cols[j]
+      
+      ggplot(df, aes_string(x = cat1, fill = cat2)) +
+        geom_bar(position = "fill") +
+        scale_y_continuous(labels = label_percent()) +
+        labs(title = paste("Proportion of", cat2, "within", cat1),
+             y = "Proportion") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) %>%
+        print()
+    }
+  }
+}
+5. Outliers
+Boxplots revealed some outliers, particularly in balance, which likely reflect loan balances at the high end rather than errors. These values are plausible within the context of the data, so they will be retained.
+
+6. Missing Values
+{r
+Copy
+Edit
+colSums(is.na(df))
+The dataset contains no missing values, simplifying downstream processing.
+
+7. Duplicate or Inconsistent Values
+{r
+Copy
+Edit
+nrow(df) - nrow(distinct(df))
+There are no duplicate rows in the dataset. All categorical labels were consistently formatted, and no inconsistent values were detected.
+
+8. Domain Knowledge Check
+The data aligns with basic domain expectations for a bank marketing campaign:
+
+Most customers hold lower balances, consistent with consumer banking.
+Higher balances do not necessarily correlate with customer engagement (e.g., call duration), reflecting the transactional nature of loan accounts.
+Certain jobs (e.g., management) and education levels are overrepresented, which is common in marketing campaigns targeting specific customer segments.
+The call durations vary widely, which is expected given some customers may decline quickly while others engage in longer conversations.
+9. Summary of Key Findings
+The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues.
+Numeric variables are mostly independent, with no strong correlations, which simplifies model selection.
+Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training.
+No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.
