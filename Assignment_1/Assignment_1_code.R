@@ -154,3 +154,20 @@ for (cat in categorical_cols) {
 
 #char pairs
 
+
+I used a *log-transformed* histogram (and removed the negative balances):
+  
+  ``` {r bal}
+summary(df_num$Avg_Balance)
+
+df_pos_bal <- df_num %>%
+  select(Avg_Balance) %>% 
+  filter(Avg_Balance > 0)
+
+df_pos_bal %>% 
+  ggplot(aes(x = log10(Avg_Balance + 1))) +  # Adding 1 avoids log(0) error
+  geom_histogram(bins = 30, fill = "blue") +
+  theme_minimal() +
+  labs(title = "Log10 Histogram of Avg Annual Balance", x = "Log10(Balance + 1)")
+
+```

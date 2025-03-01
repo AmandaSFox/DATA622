@@ -111,10 +111,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>This assignment focuses on <strong>Exploratory Data Analysis (EDA)</strong>, one of the most important steps in data science. Surveys show data scientists spend 60-80% of their time on data prep, and EDA helps <strong><em>identify data gaps, improve quality, and shape better features</em></strong> — all leading to better models.</p>
+<h2 class="anchored" data-anchor-id="introduction">1. Introduction</h2>
+<p>This assignment focuses on <strong>Exploratory Data Analysis (EDA)</strong>, one of the most important steps in data science. Surveys show data scientists spend 60-80% of their time on data prep, and EDA helps <em>identify data gaps, improve quality, and shape better features</em> — all leading to better models.</p>
 <p>The dataset comes from a study by Moro, Cortez, and Rita conducted between 2008 and 2013, where they analyzed telemarketing data from a Portuguese bank to predict the success of selling long-term deposits. The research team applied feature selection and modeling techniques, ultimately comparing logistic regression, decision trees, neural networks, and support vector machines to find the best predictive model.</p>
-<p>For this EDA, I’m using a ****pre-processed version**** of that original dataset, which has a reduced number of features.</p>
+<p>For this EDA, I’m using a <strong><em>pre-processed version</em></strong> of that original dataset, which has a reduced number of features and shows evidence that it has been thoroughly cleaned, as we will see.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
@@ -122,13 +122,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#library(corrplot)</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="dataset-overview" class="level2">
-<h2 class="anchored" data-anchor-id="dataset-overview">1. Dataset Overview</h2>
-<p>The dataset contains 45,211 records and 17 columns. There are no missing values: as we go through this EDA exercise, it is clear that this dataset has been thoroughly cleaned.</p>
+<h2 class="anchored" data-anchor-id="dataset-overview">2. Dataset Overview</h2>
+<p>The dataset contains <strong><em>45,211 records and 17 columns</em></strong>. There are <strong><em>no missing values and no duplicate records</em></strong>: as we go through this EDA exercise, it will become increasingly clear that this dataset has been thoroughly cleaned.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="st">"https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv"</span>,</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">delim =</span> <span class="st">";"</span>,</span>
@@ -165,41 +164,47 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
         y 
         0 </code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(df) <span class="sc">-</span> <span class="fu">nrow</span>(<span class="fu">distinct</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0</code></pre>
+</div>
 </div>
 <p>The data consists of bank customers who were contacted as part of a marketing campaign and the features describe customer demographics, financial history, and characteristics of their interactions, as well as a label “y” which indicates whether they did choose the new deposit account.</p>
 <p>Before doing further analysis, I changed the column names to be more meaningful: this is my personal preference so that I can more clearly see how the data stacks up against my expectations based on my business knowledge.</p>
 <p>Now let’s <em>get to know our population</em>, starting with the categorical variables:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_names</span>(<span class="st">"Age"</span>,<span class="st">"Occupation"</span>,<span class="st">"Marital_Status"</span>,<span class="st">"Education"</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>            <span class="st">"In_Default"</span>,<span class="st">"Avg_Balance"</span>,<span class="st">"Housing_Loan"</span>,<span class="st">"Personal_Loan"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Contact_Type"</span>,<span class="st">"Day"</span>,<span class="st">"Month"</span>,<span class="st">"Duration"</span>,<span class="st">"Contacts_This_Campaign"</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Days_Since_Last_Campaign"</span>,<span class="st">"Contacts_Before_This_Campaign"</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Previous_Outcome"</span>,<span class="st">"Y"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_names</span>(<span class="st">"Age"</span>,<span class="st">"Occupation"</span>,<span class="st">"Marital_Status"</span>,<span class="st">"Education"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>            <span class="st">"In_Default"</span>,<span class="st">"Avg_Balance"</span>,<span class="st">"Housing_Loan"</span>,<span class="st">"Personal_Loan"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Contact_Type"</span>,<span class="st">"Day"</span>,<span class="st">"Month"</span>,<span class="st">"Duration"</span>,<span class="st">"Contacts_This_Campaign"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Days_Since_Last_Campaign"</span>,<span class="st">"Contacts_Before_This_Campaign"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Previous_Outcome"</span>,<span class="st">"Y"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Simple frequency distributions paint a picture of a typical, middle-class, adult population of target customers for banking products:</p>
-<ol type="1">
-<li>Most were employed: only 10.0% were not currently employed (retired, unemployed, student) and 0.6% were unknown. The remaining 89.4% were split among eight categories, with blue-collar (21.5%), management (20.9%), and technician (16.8%) being the most common.<br>
-</li>
-<li>Education varied, in alignment with the occupations above: 29.4% had tertiary educatio, 51.3% secondary, 15.2% primary</li>
-<li>Most were married (60.2%)</li>
-<li>Financially stable: 98.2% were not in default, 55.6% had housing loans and only 16% had personal loans.</li>
-</ol>
-<p>The “previous outcome” field is interesting: 3.3% of previous interactions were deemed “successes,” which raises the question why they were called again. 81.7% were “unknown” and 4.1% “other,” so I do not believe this field is very meaningful.</p>
-<p>Finally, <strong>11.4%</strong> of contacts resulted in a new deposit account, which was the goal of the marketing outreach.</p>
+</section>
+<section id="exploring-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="exploring-the-data">3. Exploring the Data</h2>
+<p>Simple frequency distributions of the categorical variables were done to check for class imbalance. Overall, this data paints a picture of a <strong><em>financially stable, middle-class, working-age adult population</em></strong>: typical of <em>target customers for banking products</em>.</p>
+<p>It should also be noted here again that this data is <em>extremely clean</em>: just as there are no missing values, there are no clearly incorrect values (e.g.&nbsp;misspellings, upper/lower case issues, values appearing in the wrong columns/truncated/concatenated/etc.).</p>
+<p>Regarding the target population:</p>
+<p><strong>1. Most target customers were employed</strong>: There were eight occupation categories comprising <strong>89.4%</strong> of the population, with blue-collar (21.5%), management (20.9%), and technician (16.8%) being the most common categories. Only 10.0% of customers were not currently employed (retired, unemployed, student) and 0.6% were unknown.</p>
+<p><strong>2. Education varied</strong> in rough alignment with the occupations above: 29.4% had tertiary education, 51.3% secondary, 15.2% primary</p>
+<p><strong>3. Most were married (60.2%)</strong></p>
+<p><strong>4. They were financially stable</strong>: 98.2% were not in default, 55.6% had housing loans and only 16% had personal loans.</p>
+<p>The “previous outcome” field is interesting: <em>3.3% of previous interactions were deemed “successes,”</em> which raises the question why they were called again. 81.7% were “unknown” and 4.1% “other,” so I <em>do not believe this field is very meaningful</em>.</p>
+<p>Finally, <strong><em>11.4% of contacts were successful</em></strong> in selling the product, the goal of the marketing outreach: this is our <strong>label</strong> for supervised ML.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># categorical column list</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>cat_cols <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span> </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.character)) <span class="sc">%&gt;%</span>  </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> cat_cols) {</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>   df_final <span class="sc">%&gt;%</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(.data[[col]]) <span class="sc">%&gt;%</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(Pct)) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>()</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># categorical column list</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>cat_cols <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.character)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (col <span class="cf">in</span> cat_cols) {</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>   df_final <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(.data[[col]]) <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(<span class="fu">desc</span>(Pct)) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>()</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 12 × 3
    Occupation        n   Pct
@@ -279,27 +284,26 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 2 yes    5289  11.7</code></pre>
 </div>
 </div>
-<p>Next, our numeric variables. Note that most of these have very long tails that make histograms difficult; we will handle those with log10 shortly.</p>
-<p>First, to complete our analysis of the population, I broke out Age separately.</p>
-<p>This shows a solid, mostly working-age adult population with a nearly normal distribution:</p>
+<p>Next, we look at our numeric variables for central tendency, spread, and outliers.</p>
+<p>To complete our demographic analysis, I first analyzed <strong>Age</strong>, which shows a solid, <em>mostly working-age adult population</em> in alignment with a bank’s target customer base:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># numerical column list: removed "Day" as it is not a meaningful number</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>df_num <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span> </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Day) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Age</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># numerical column list: removed "Day" as it is not a meaningful number</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>df_num <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>Day) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Age</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
   18.00   33.00   39.00   40.94   48.00   95.00 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>plot_age <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Age))<span class="sc">+</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>,<span class="at">fill=</span><span class="st">"seagreen"</span>) <span class="sc">+</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">5</span>)) <span class="sc">+</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(plot_age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>plot_age <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Age))<span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>,<span class="at">fill=</span><span class="st">"seagreen"</span>) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">5</span>)) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(plot_age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -308,22 +312,22 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </div>
 </div>
 </div>
-<p>Another numeric column (Avg Balance) can tell us more about their financial health. However, most people owed little with a few owing quite a lot: given the extreme right skew, this histogram is zoomed in to focus on balances below $5000, covering the vast majority of customers.</p>
-<p><em>Average annual balance</em>: The median annual average balance owed was only $448, with a narrow IQR of $1,480. The max was quite high at $102,127, and there were some negative balances owed.</p>
+<p>Another numeric column (Avg Balance) tells us more about their financial health. Note that <em>most people owed very little with a few owing quite a lot</em>: given the extreme right skew, this histogram is zoomed in to focus on balances below $5000.</p>
+<p><strong>Average annual balance</strong>: The median annual average balance owed was only $448, with a narrow IQR of $1,480. The max was high but reasonable at $102,127, and there were some small negative balances owed, likely reflecting overpaid accounts. These outliers and negative values will be <em>left alone</em> as they are realistic and potentially meaningful.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Avg_Balance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Avg_Balance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
   -8019      72     448    1362    1428  102127 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df_num <span class="sc">%&gt;%</span> </span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Avg_Balance)) <span class="sc">+</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">1000</span>, <span class="at">fill =</span> <span class="st">"gray80"</span>) <span class="sc">+</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color=</span><span class="st">"black"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1000</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1000</span>, <span class="dv">8000</span>, <span class="at">by =</span> <span class="dv">1000</span>)) <span class="sc">+</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Avg Annual Balance: Zoomed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>df_num <span class="sc">%&gt;%</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Avg_Balance)) <span class="sc">+</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">1000</span>, <span class="at">fill =</span> <span class="st">"gray80"</span>) <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color=</span><span class="st">"black"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1000</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1000</span>, <span class="dv">8000</span>, <span class="at">by =</span> <span class="dv">1000</span>)) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Avg Annual Balance: Zoomed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -332,25 +336,24 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </div>
 </div>
 </div>
-<p>Next, we look at other numeric variables around the outreach itself:</p>
-<ol type="1">
-<li>Median call duration was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. No negative numbers were found.</li>
-<li>This was the first campaign for a large majority (81.9%)</li>
-<li>Most were contacted fewer than five times this campaign</li>
-</ol>
+<p>The remaining numeric variables describe the outreach itself:</p>
+<p><strong>1. Median call duration</strong> was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. No negative numbers were found. The outliers will be <em>left alone</em> as they are realistic for long phone calls.</p>
+<p><strong>2. Contacts before this campaign</strong>: This was the first campaign for a large majority of customers (81.9%)</p>
+<p><strong>3. Contacts this campaign</strong>: The median # of contacts this campaign was two calls, with an IQR of two. The min was one call, which makes sense, but the max ranged up to 63: this seems unusual and could possibly be a data issue but we will <em>leave these outliers alone</em> for now.</p>
+<p><strong>4. Days since last campaign</strong>: This is the first <em>potential problem</em> in the data: the 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause statistical and mathematical issues (see summary for an example). <em>These might be better changed to NA</em>. Ignoring these for now, the histogram below shows values &gt;0, which vary widely with no particular pattern. I’m not clear on the value of this data from a business perspective, but we will see.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call Duration</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Duration)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call Duration</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Duration)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     0.0   103.0   180.0   258.2   319.0  4918.0 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_num, <span class="fu">aes</span>(<span class="at">x =</span> Duration)) <span class="sc">+</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">60</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">100</span>,<span class="dv">2000</span>)) <span class="sc">+</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">200</span>)) <span class="sc">+</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Call Duration in Seconds: Zoomed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_num, <span class="fu">aes</span>(<span class="at">x =</span> Duration)) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">60</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">100</span>,<span class="dv">2000</span>)) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">200</span>)) <span class="sc">+</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Call Duration in Seconds: Zoomed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -358,31 +361,25 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </figure>
 </div>
 </div>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contacts Before This Campaign</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Contacts_Before_This_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contacts Before This Campaign</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Contacts_Before_This_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
   0.0000   0.0000   0.0000   0.5803   0.0000 275.0000 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contacts_Before_This_Campaign) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Contacts =</span> <span class="fu">ifelse</span>(Contacts_Before_This_Campaign <span class="sc">&lt;=</span> <span class="dv">5</span>, </span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Contacts_Before_This_Campaign), </span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;5"</span>),</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Contacts) <span class="sc">%&gt;%</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Contacts)) <span class="sc">%&gt;%</span> </span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># Show all rows (helpful in case there's 0-9 and "Other")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: There was 1 warning in `arrange()`.
-ℹ In argument: `..1 = as.numeric(Contacts)`.
-Caused by warning:
-! NAs introduced by coercion</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contacts_Before_This_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Contacts =</span> <span class="fu">ifelse</span>(Contacts_Before_This_Campaign <span class="sc">&lt;=</span> <span class="dv">5</span>, </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Contacts_Before_This_Campaign), </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;5"</span>),</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Contacts) <span class="sc">%&gt;%</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Contacts)) <span class="sc">%&gt;%</span> </span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># Show all rows (helpful in case there's 0-9 and "Other")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 7 × 3
   Contacts     n   Pct
@@ -395,31 +392,25 @@ Caused by warning:
 6 5          459   1  
 7 &gt;5        1064   2  </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contacts This Campaign</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Contacts_This_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contacts This Campaign</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Contacts_This_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
   1.000   1.000   2.000   2.764   3.000  63.000 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contacts_This_Campaign) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Contacts =</span> <span class="fu">ifelse</span>(Contacts_This_Campaign <span class="sc">&lt;=</span> <span class="dv">9</span>, </span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Contacts_This_Campaign), </span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;9"</span>),</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Contacts) <span class="sc">%&gt;%</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Contacts)) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># Show all rows (helpful in case there's 0-9 and "Other")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: There was 1 warning in `arrange()`.
-ℹ In argument: `..1 = as.numeric(Contacts)`.
-Caused by warning:
-! NAs introduced by coercion</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contacts_This_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Contacts =</span> <span class="fu">ifelse</span>(Contacts_This_Campaign <span class="sc">&lt;=</span> <span class="dv">9</span>, </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Contacts_This_Campaign), </span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;9"</span>),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Contacts) <span class="sc">%&gt;%</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Contacts)) <span class="sc">%&gt;%</span> </span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># Show all rows (helpful in case there's 0-9 and "Other")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 10 × 3
    Contacts     n   Pct
@@ -453,97 +444,85 @@ Caused by warning:
 <span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Days) <span class="sc">%&gt;%</span></span>
 <span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
 <span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Days)) <span class="sc">%&gt;%</span> </span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  kable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: There was 1 warning in `arrange()`.
-ℹ In argument: `..1 = as.numeric(Days)`.
-Caused by warning:
-! NAs introduced by coercion</code></pre>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+  Days      n   Pct
+  &lt;chr&gt; &lt;int&gt; &lt;dbl&gt;
+1 -1    36954  81.7
+2 1        15   0  
+3 2        37   0.1
+4 3         1   0  
+5 4         2   0  
+6 5        11   0  
+7 &gt;5     8191  14.4</code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>df_days_gt_0 <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Days_Since_Last_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Days_Since_Last_Campaign <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_days_gt_0, <span class="fu">aes</span>(<span class="at">x =</span> Days_Since_Last_Campaign)) <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">60</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">100</span>,<span class="dv">2000</span>)) <span class="sc">+</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">200</span>)) <span class="sc">+</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Days Since Last Campaign: &gt;0 Days"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<table class="table table-sm table-striped small">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Days</th>
-<th style="text-align: right;">n</th>
-<th style="text-align: right;">Pct</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">-1</td>
-<td style="text-align: right;">36954</td>
-<td style="text-align: right;">81.7</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">1</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: right;">0.0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">2</td>
-<td style="text-align: right;">37</td>
-<td style="text-align: right;">0.1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">3</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">4</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.0</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">5</td>
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">0.0</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">&gt;5</td>
-<td style="text-align: right;">8191</td>
-<td style="text-align: right;">14.4</td>
-</tr>
-</tbody>
-</table>
+<div>
+<figure class="figure">
+<p><img src="Assignment_1_Fox_files/figure-html/outreach-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 </section>
-<section id="pivot-to-support-a-single-faceted-histogram" class="level1">
-<h1>pivot to support a single faceted histogram</h1>
-<p>df_long &lt;- df_num %&gt;% pivot_longer(everything())</p>
-<p>plot_hist &lt;- df_long %&gt;% ggplot(aes(value))+ geom_histogram(bins = 30,fill=“gray80”) + facet_wrap(~name, scales = “free”) + theme_minimal() plot_hist</p>
-<p>plot counts:</p>
-<p>df %&gt;% count(job) %&gt;% ggplot(aes(x = job, y = n)) +<br>
-geom_col() + theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+<section id="relationships-between-variables" class="level2">
+<h2 class="anchored" data-anchor-id="relationships-between-variables">4. Relationships Between Variables</h2>
+<section id="numeric-vs-numeric---correlation-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="numeric-vs-numeric---correlation-analysis">4.1 Numeric vs Numeric - Correlation Analysis</h3>
+<p>A correlation matrix was computed to identify relationships between numeric features. No significant correlations were found, in fact, <em>only one pair of numeric columns had a correlation coefficient (absolute value) over 0.1</em>: “contacts before this campaign” and “days since last campaign”. This makes sense as most (81.4%) of people contacted had zero contacts before this campaign and therefore had a value of -1 days since last campaign.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>(<span class="at">use =</span> <span class="st">"pairwise.complete.obs"</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co"># table of pairs with coefficients</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>cor_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">as.table</span>(cor_matrix)) <span class="sc">%&gt;%</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Var1 <span class="sc">!=</span> Var2) <span class="sc">%&gt;%</span>                    </span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">abs</span>(Freq) <span class="sc">&gt;</span> <span class="fl">0.1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(<span class="fu">abs</span>(Freq)))</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>cor_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                           Var1                          Var2      Freq
+1 Contacts_Before_This_Campaign      Days_Since_Last_Campaign 0.4548196
+2      Days_Since_Last_Campaign Contacts_Before_This_Campaign 0.4548196</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>melt_cor <span class="ot">&lt;-</span> <span class="fu">melt</span>(cor_matrix)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(melt_cor, <span class="fu">aes</span>(Var1, Var2, <span class="at">fill =</span> value)) <span class="sc">+</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>(<span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> <span class="st">"blue"</span>, <span class="at">high =</span> <span class="st">"red"</span>, <span class="at">mid =</span> <span class="st">"white"</span>,</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>                       <span class="at">midpoint =</span> <span class="dv">0</span>, <span class="at">limit =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">1</span>), <span class="at">space =</span> <span class="st">"Lab"</span>,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>                       <span class="at">name=</span><span class="st">"Correlation"</span>) <span class="sc">+</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">vjust =</span> <span class="dv">1</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_fixed</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_1_Fox_files/figure-html/cor_matrix-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>I also tried ggally and scatterplots in case there were non-linear patterns, but they showed no patterns.</p>
+<p>The lack of correlation among these columns is more evidence that this dataset was thoroughly pre-processed.</p>
 </section>
-<section id="contacts-before-this-campaign" class="level1">
-<h1>contacts before this campaign</h1>
-<p>df_final %&gt;% count(Contacts_Before_This_Campaign) %&gt;% mutate(Pct = round((n / sum(n)) * 100, 1))</p>
-</section>
-<section id="contacts-this-campaign" class="level1">
-<h1>contacts this campaign</h1>
-<p>df_final %&gt;% count(Contacts_This_Campaign)</p>
-</section>
-<section id="bar-charts-for-categorical-variables" class="level1">
-<h1>Bar charts for categorical variables</h1>
-<p>for (col in cat_cols) { print(ggplot(df_final, aes_string(x = col, fill = col)) + geom_bar() + theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(title = paste(“Bar Chart of”, col), x = col, y = “Count”)) }</p>
-<p>```</p>
-<ol start="2" type="1">
-<li><p>Structure &amp; Initial Review ```{r Copy Edit glimpse(df) summary(df) The dataset is extremely clean, with all variables correctly typed (numeric or categorical). There are no missing values, and the data appears pre-processed.</p></li>
-<li><p>Univariate Analysis - Individual Variable Distributions 3.1 Categorical Variables The distribution of each categorical variable was reviewed to check for class imbalance.</p></li>
-</ol>
-<p>{r Copy Edit categorical_cols &lt;- df %&gt;% select(where(is.character)) %&gt;% names()</p>
-<p>for (cat in categorical_cols) { cat_table &lt;- df %&gt;% count(.data[[cat]]) %&gt;% mutate(percent = (n / sum(n)) * 100)</p>
-<p>print(cat_table)</p>
-<p>ggplot(df, aes_string(x = cat, fill = cat)) + geom_bar() + theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(title = paste(“Distribution of”, cat)) %&gt;% print() } 3.2 Numeric Variables Summary statistics for numeric variables show central tendency, spread, and possible outliers.</p>
-<p>{r Copy Edit numeric_cols &lt;- df %&gt;% select(where(is.numeric)) %&gt;% names()</p>
-<p>for (num in numeric_cols) { summary_stats &lt;- df %&gt;% summarise(min = min(.data[[num]], na.rm = TRUE), mean = mean(.data[[num]], na.rm = TRUE), median = median(.data[[num]], na.rm = TRUE), max = max(.data[[num]], na.rm = TRUE), sd = sd(.data[[num]], na.rm = TRUE))</p>
-<p>print(paste(“Summary for”, num)) print(summary_stats) } 4. Relationships Between Variables 4.1 Numeric vs Numeric - Correlation Analysis A correlation matrix was computed to identify relationships between numeric features.</p>
-<p>{r Copy Edit cor_matrix &lt;- cor(df %&gt;% select(where(is.numeric)), use = “pairwise.complete.obs”) cor_matrix No numeric pairs exhibited strong correlation (all below 0.5). This confirms that numeric features like age, balance, and contact count are relatively independent, with no clear linear relationships between them.</p>
-<p>4.2 Numeric vs Categorical - Boxplots Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.</p>
-<p>{r Copy Edit for (cat in categorical_cols) { for (num in numeric_cols) { ggplot(df, aes_string(x = cat, y = num)) + geom_boxplot(outlier.color = “red”, outlier.shape = 1) + theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(title = paste(num, “by”, cat)) %&gt;% print() } } 4.3 Categorical vs Categorical - Stacked Bar Charts Relationships between categorical variables were visualized using stacked bar charts.</p>
+<section id="numeric-vs-categorical---boxplots" class="level3">
+<h3 class="anchored" data-anchor-id="numeric-vs-categorical---boxplots">4.2 Numeric vs Categorical - Boxplots</h3>
+<p>Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.</p>
+<p>{r Copy Edit for (cat in categorical_cols) { for (num in numeric_cols) { ggplot(df, aes_string(x = cat, y = num)) + geom_boxplot(outlier.color = “red”, outlier.shape = 1) + theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + labs(title = paste(num, “by”, cat)) %&gt;% print() } } ### 4.3 Categorical vs Categorical - Stacked Bar Charts Relationships between categorical variables were visualized using stacked bar charts.</p>
 <p>{r Copy Edit if (length(categorical_cols) &gt; 1) { for (i in 1:(length(categorical_cols) - 1)) { for (j in (i + 1):length(categorical_cols)) { cat1 &lt;- categorical_cols[i] cat2 &lt;- categorical_cols[j]</p>
 <pre><code>  ggplot(df, aes_string(x = cat1, fill = cat2)) +
     geom_bar(position = "fill") +
@@ -554,20 +533,19 @@ geom_col() + theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) %&gt;%
     print()
 }</code></pre>
-<p>} } 5. Outliers Boxplots revealed some outliers, particularly in balance, which likely reflect loan balances at the high end rather than errors. These values are plausible within the context of the data, so they will be retained.</p>
-<ol start="6" type="1">
-<li><p>Missing Values {r Copy Edit colSums(is.na(df)) The dataset contains no missing values, simplifying downstream processing.</p></li>
-<li><p>Duplicate or Inconsistent Values {r Copy Edit nrow(df) - nrow(distinct(df)) There are no duplicate rows in the dataset. All categorical labels were consistently formatted, and no inconsistent values were detected.</p></li>
-<li><p>Domain Knowledge Check The data aligns with basic domain expectations for a bank marketing campaign:</p></li>
-</ol>
-<p>Most customers hold lower balances, consistent with consumer banking. Higher balances do not necessarily correlate with customer engagement (e.g., call duration), reflecting the transactional nature of loan accounts. Certain jobs (e.g., management) and education levels are overrepresented, which is common in marketing campaigns targeting specific customer segments. The call durations vary widely, which is expected given some customers may decline quickly while others engage in longer conversations. 9. Summary of Key Findings The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues. Numeric variables are mostly independent, with no strong correlations, which simplifies model selection. Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training. No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.</p>
+<p>} }</p>
+</section>
+<section id="summary-of-key-findings" class="level3">
+<h3 class="anchored" data-anchor-id="summary-of-key-findings">Summary of Key Findings</h3>
+<p>The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues. Numeric variables are mostly independent, with no strong correlations, which simplifies model selection. Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training. No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.</p>
+</section>
+</section>
 <section id="works-cited" class="level2">
 <h2 class="anchored" data-anchor-id="works-cited">Works Cited</h2>
 <p>ChatGPT. “ChatGPT.” Chatgpt.com, 2024, chatgpt.com. Accessed Feb.&nbsp;2025.<br>
 R coding assistance.</p>
 <p>Moro, Sérgio et al.&nbsp;“A data-driven approach to predict the success of bank telemarketing.” Decis. Support Syst. 62 (2014): 22-31.</p>
 <p>Moro, S., P. Rita, and P. Cortez. “Bank Marketing.” UCI Machine Learning Repository, 2014, https://doi.org/10.24432/C5K306. Accessed Feb.&nbsp;2025.</p>
-</section>
 </section>
 
 </main>
