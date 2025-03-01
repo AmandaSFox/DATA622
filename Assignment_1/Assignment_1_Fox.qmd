@@ -261,43 +261,51 @@ The lack of correlation among these columns is more evidence that this dataset w
   
 Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.
 
-{r
-Copy
-Edit
-for (cat in categorical_cols) {
-  for (num in numeric_cols) {
-    ggplot(df, aes_string(x = cat, y = num)) +
+``` {r box}
+num_cols <- df_num %>% 
+  names()
+
+for (cat in cat_cols) {
+  for (num in num_cols) {
+    p <- ggplot(df_final, 
+                aes(x = .data[[cat]], 
+                    y = .data[[num]])) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_minimal() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      labs(title = paste(num, "by", cat)) %>%
-      print()
+      labs(title = paste(num, "by", cat))
+    
+    print(p)
   }
 }
+```
+
 ### 4.3 Categorical vs Categorical - Stacked Bar Charts
 Relationships between categorical variables were visualized using stacked bar charts.
 
-{r
-Copy
-Edit
-if (length(categorical_cols) > 1) {
-  for (i in 1:(length(categorical_cols) - 1)) {
-    for (j in (i + 1):length(categorical_cols)) {
-      cat1 <- categorical_cols[i]
-      cat2 <- categorical_cols[j]
+```{r stacked}
+
+if (length(cat_cols) > 1) {
+  for (i in 1:(length(cat_cols) - 1)) {
+    for (j in (i + 1):length(cat_cols)) {
+      cat1 <- cat_cols[i]
+      cat2 <- cat_cols[j]
       
-      ggplot(df, aes_string(x = cat1, fill = cat2)) +
+      p <- ggplot(df_final, 
+                  aes(x = .data[[cat1]], 
+                      fill = .data[[cat2]])) +
         geom_bar(position = "fill") +
-        scale_y_continuous(labels = label_percent()) +
+        scale_y_continuous(labels = scales::label_percent()) +
         labs(title = paste("Proportion of", cat2, "within", cat1),
              y = "Proportion") +
         theme_minimal() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1)) %>%
-        print()
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      
+      print(p)
     }
   }
 }
-
+```
 
 ### Summary of Key Findings
 The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues.
