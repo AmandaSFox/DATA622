@@ -13,7 +13,7 @@ The dataset comes from a study by Moro, Cortez, and Rita conducted between 2008 
 
 For this EDA, I’m using a ***pre-processed version*** of that original dataset, which has a reduced number of features and shows evidence that it has been thoroughly cleaned, as we will see. 
 
-```{r libraries, message = FALSE, warning = FALSE}
+```{r load, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(ggplot2)
 library(purrr)
@@ -21,6 +21,11 @@ library(knitr)
 library(scales)
 library(reshape2)
 library(GGally)
+
+df <- read_delim("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv",
+                 delim = ";",
+                 quote = "\"")
+
 ```
 
 ## 2. Dataset Overview
@@ -29,22 +34,18 @@ The dataset contains ***45,211 records and 17 columns***. There are ***no missin
 
 ```{r overview, message = FALSE, warning = FALSE}
 
-df <- read_delim("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv",
-                 delim = ";",
-                 quote = "\"")
-
 glimpse(df)
 
+# missing data
 colSums(is.na(df))
 
+# duplicate records
 nrow(df) - nrow(distinct(df))
 
 ```
 The data consists of bank customers who were contacted as part of a marketing campaign and the features describe customer demographics, financial history, and characteristics of their interactions, as well as a label "y" which indicates whether they did choose the new deposit account.
 
-Before doing further analysis, I changed the column names to be more meaningful: this is my personal preference so that I can more clearly see how the data stacks up against my expectations based on my business knowledge.
-
-Now let's *get to know our population*, starting with the categorical variables:
+Before doing further analysis, I reviewed the documentation and changed the column names to be more meaningful: I like to do this so that I can more clearly see how the data stacks up against my expectations and business knowledge.
 
 ``` {r col_names}
 df_final <- df %>% 
@@ -57,12 +58,14 @@ df_final <- df %>%
 
 ## 3. Exploring the Data
 
-Simple frequency distributions of the categorical variables were done to check for class imbalance. Overall, this data paints a picture of a ***financially stable, middle-class, working-age adult population***: typical of *target customers for banking products*. 
-
-It should also be noted here again that this data is *extremely clean*: just as there are no missing values, there are no clearly incorrect values (e.g. misspellings, upper/lower case issues, values appearing in the wrong columns/truncated/concatenated/etc.). 
-
+Now let's *get to know our population*, starting with the **categorical variables**. 
+  
+Simple frequency distributions were done to check for class imbalance. Overall, this data paints a picture of a **financially stable, middle-class, working-age adult population** which is **typical of target customers for banking products** like deposit accounts. 
+  
+It should be noted here again that this data is *extremely clean*: just as there are no missing values, there are no clearly incorrect values (e.g. misspellings, upper/lower case issues, values appearing in the wrong columns/truncated/concatenated/etc.). 
+  
 Regarding the target population:
-
+  
 **1. Most target customers were employed**: There were eight occupation categories comprising **89.4%** of the population, with blue-collar (21.5%), management (20.9%), and technician (16.8%) being the most common categories. Only 10.0% of customers were not currently employed (retired, unemployed, student) and 0.6% were unknown.  
   
 **2. Education varied** in rough alignment with the occupations above: 29.4% had tertiary education, 51.3% secondary, 15.2% primary
@@ -71,9 +74,9 @@ Regarding the target population:
   
 **4. They were financially stable**: 98.2% were not in default, 55.6% had housing loans and only 16% had personal loans. 
   
-The "previous outcome" field is interesting: *3.3% of previous interactions were deemed "successes,"* which raises the question why they were called again. 81.7% were "unknown" and 4.1% "other," so I *do not believe this field is very meaningful*. 
+Regarding the other categorical fields, the "previous outcome" field is interesting: **3.3% of previous interactions were deemed "successes,"** which raises the question why they were called again. 81.7% were "unknown," which seems to indicate this was their first interaction, and 4.1% "other," so I *do not believe this field is very meaningful*. 
   
-Finally, ***11.4% of contacts were successful*** in selling the product, the goal of the marketing outreach: this is our **label** for supervised ML.
+Finally, our **label (y)**: ***11.4% of contacts were successful*** in selling the product, the goal of the marketing outreach and our label for supervised ML.
   
 ``` {r frequencies}
 
@@ -92,9 +95,9 @@ for (col in cat_cols) {
 
 ```
 
-Next, we look at our numeric variables for central tendency, spread, and outliers. 
-
-To complete our demographic analysis, I first analyzed **Age**, which shows a solid, *mostly working-age adult population* in alignment with a bank's target customer base:
+Next, we look at our **numeric variables** for central tendency, spread, and outliers. 
+  
+To complete our demographic analysis, I first looked at **Age**, which shows a solid, *mostly working-age adult population* in alignment with a bank's target customer base:
   
 ```{r num_dist}
 # numerical column list: removed "Day" as it is not a meaningful number
@@ -114,9 +117,11 @@ print(plot_age)
 
 ```
 
-Another numeric column (Avg Balance) tells us more about their financial health. Note that *most people owed very little with a few owing quite a lot*: given the extreme right skew, this histogram is zoomed in to focus on balances below $5000. 
+Another numeric column (Avg Balance) tells us more about their financial health. Note that *most people owed very little with a few owing quite a lot*: given the **extreme right skew**, the histogram below is zoomed in to balances below $5000. 
   
-**Average annual balance**: The median annual average balance owed was only \$448, with a narrow IQR of \$1,480. The max was high but reasonable at \$102,127, and there were some small negative balances owed, likely reflecting overpaid accounts. These outliers and negative values will be *left alone* as they are realistic and potentially meaningful.
+**Average annual balance**: The median annual average balance owed was only \$448, with a narrow IQR of \$1,480. The max was realistic at \$102,127, and there were some small negative balances owed, likely reflecting overpaid accounts. 
+  
+These outliers and negative values will be *left alone* as they are realistic and meaningful.
   
 ``` {r bal_zoom}
 
@@ -135,14 +140,20 @@ df_num %>%
 
 The remaining numeric variables describe the outreach itself:
 
-**1. Median call duration** was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. No negative numbers were found. The outliers will be *left alone* as they are realistic for long phone calls.
+**1. Median call duration** was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. 
   
-**2. Contacts before this campaign**: This was the first campaign for a large majority of customers (81.9%)
-
+No negative numbers were found. The outliers will be *left alone* as they are realistic and meaningful.
+  
+**2. Contacts before this campaign**: This was the first campaign for a large majority of customers (81.9%). No negative or obviously incorrect values were found.
+  
 **3. Contacts this campaign**: The median # of contacts this campaign was two calls, with an IQR of two. The min was one call, which makes sense, but the max ranged up to 63: this seems unusual and could possibly be a data issue but we will *leave these outliers alone* for now. 
-
-**4. Days since last campaign**: This is the first *potential problem* in the data: the 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause statistical and mathematical issues (see summary for an example). *These might be better changed to NA*. Ignoring these for now, the histogram below shows values >0, which vary widely with no particular pattern. I'm not clear on the value of this data from a business perspective, but we will see.
-
+  
+**4. Days since last campaign**: This is the **first potential problem** in the data: the 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause statistical and mathematical issues (see summary). 
+  
+*These -1 numeric values might be better changed to NA*. Ignoring these for now, the histogram below shows values >0, which vary widely in a multimodal distribution with perhaps a *quarterly* pattern and a very *long tail*. I'm not clear on the value of this data, but we will leave it alone.
+  
+Note on other visuals not included: Box plots reflected the distributions and outliers noted above, so I did not include any here.
+  
 ``` {r outreach, message = FALSE, warning = FALSE}
 # Call Duration
 summary(df_num$Duration)
@@ -213,7 +224,7 @@ ggplot(df_days_gt_0, aes(x = Days_Since_Last_Campaign)) +
   geom_histogram(bins = 60, fill = "skyblue") +
   theme_minimal() +
   coord_cartesian(c(-100,2000)) +
-  scale_x_continuous(breaks = seq(0, 2000, by = 200)) +
+  scale_x_continuous(breaks = seq(0, 2000, by = 90)) +
   labs(title = "Days Since Last Campaign: >0 Days")
 
 
@@ -223,8 +234,12 @@ ggplot(df_days_gt_0, aes(x = Days_Since_Last_Campaign)) +
 
 ### 4.1 Numeric vs Numeric - Correlation Analysis
 
-A correlation matrix was computed to identify relationships between numeric features. No significant correlations were found, in fact, *only one pair of numeric columns had a correlation coefficient (absolute value) over 0.1*: "contacts before this campaign" and "days since last campaign". This makes sense as most (81.4%) of people contacted had zero contacts before this campaign and therefore had a value of -1 days since last campaign.
+A correlation matrix was computed to identify relationships between numeric features. 
   
+No significant correlations were found, in fact, **all pairs had correlation coefficients (absolute value) less than 0.1 except for one**: "contacts before this campaign" and "days since last campaign" had a correlation coefficient of 0.45. This is still low but it makes sense that there is some correlation because over 80% of people contacted had had zero contacts before this campaign and therefore had a value of -1 days since last campaign. 
+  
+The **lack of correlation** between columns is more evidence that this dataset was thoroughly **pre-processed**. 
+
 ``` {r cor_matrix}
 
 cor_matrix <- df_num %>% 
@@ -252,14 +267,13 @@ ggplot(melt_cor, aes(Var1, Var2, fill = value)) +
 
 ```
 
-I also tried ggally and scatterplots in case there were non-linear patterns, but they showed no patterns. 
-
-The lack of correlation among these columns is more evidence that this dataset was thoroughly pre-processed. 
-
-
+*Other visuals not included here*: I tried scatterplots and ggally in case there were non-linear correlation patterns, but they showed nothing of interest. 
+  
 ### 4.2 Numeric vs Categorical - Boxplots
   
-Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.
+Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital. 
+
+None of the relationships were unexpected, and many were not meaningful at all (month vs. age, for example). However, a few interesting/intuitive pairs are included below as examples.
 
 ``` {r box}
 num_cols <- df_num %>% 
@@ -309,12 +323,9 @@ if (length(cat_cols) > 1) {
 
 ### Summary of Key Findings
 The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues.
-Numeric variables are mostly independent, with no strong correlations, which simplifies model selection.
-Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training.
-No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.
-
-
-
+No unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.
+Numeric variables are all independent.
+Categorical variables exhibit some class imbalance, which may require consideration in model training.
 
 ## Works Cited
 

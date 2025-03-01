@@ -122,18 +122,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="st">"https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv"</span>,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                 <span class="at">delim =</span> <span class="st">";"</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                 <span class="at">quote =</span> <span class="st">"</span><span class="sc">\"</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="dataset-overview" class="level2">
 <h2 class="anchored" data-anchor-id="dataset-overview">2. Dataset Overview</h2>
 <p>The dataset contains <strong><em>45,211 records and 17 columns</em></strong>. There are <strong><em>no missing values and no duplicate records</em></strong>: as we go through this EDA exercise, it will become increasingly clear that this dataset has been thoroughly cleaned.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="st">"https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv"</span>,</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">delim =</span> <span class="st">";"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">quote =</span> <span class="st">"</span><span class="sc">\"</span><span class="st">"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Rows: 45,211
 Columns: 17
@@ -155,7 +155,8 @@ $ previous  &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 $ poutcome  &lt;chr&gt; "unknown", "unknown", "unknown", "unknown", "unknown", "unkn…
 $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "no", …</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># missing data</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colSums</span>(<span class="fu">is.na</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      age       job   marital education   default   balance   housing      loan 
         0         0         0         0         0         0         0         0 
@@ -164,14 +165,14 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
         y 
         0 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(df) <span class="sc">-</span> <span class="fu">nrow</span>(<span class="fu">distinct</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># duplicate records</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(df) <span class="sc">-</span> <span class="fu">nrow</span>(<span class="fu">distinct</span>(df))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0</code></pre>
 </div>
 </div>
 <p>The data consists of bank customers who were contacted as part of a marketing campaign and the features describe customer demographics, financial history, and characteristics of their interactions, as well as a label “y” which indicates whether they did choose the new deposit account.</p>
-<p>Before doing further analysis, I changed the column names to be more meaningful: this is my personal preference so that I can more clearly see how the data stacks up against my expectations based on my business knowledge.</p>
-<p>Now let’s <em>get to know our population</em>, starting with the categorical variables:</p>
+<p>Before doing further analysis, I reviewed the documentation and changed the column names to be more meaningful: I like to do this so that I can more clearly see how the data stacks up against my expectations and business knowledge.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_names</span>(<span class="st">"Age"</span>,<span class="st">"Occupation"</span>,<span class="st">"Marital_Status"</span>,<span class="st">"Education"</span>,</span>
@@ -183,15 +184,16 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </section>
 <section id="exploring-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="exploring-the-data">3. Exploring the Data</h2>
-<p>Simple frequency distributions of the categorical variables were done to check for class imbalance. Overall, this data paints a picture of a <strong><em>financially stable, middle-class, working-age adult population</em></strong>: typical of <em>target customers for banking products</em>.</p>
-<p>It should also be noted here again that this data is <em>extremely clean</em>: just as there are no missing values, there are no clearly incorrect values (e.g.&nbsp;misspellings, upper/lower case issues, values appearing in the wrong columns/truncated/concatenated/etc.).</p>
+<p>Now let’s <em>get to know our population</em>, starting with the <strong>categorical variables</strong>.</p>
+<p>Simple frequency distributions were done to check for class imbalance. Overall, this data paints a picture of a <strong>financially stable, middle-class, working-age adult population</strong> which is <strong>typical of target customers for banking products</strong> like deposit accounts.</p>
+<p>It should be noted here again that this data is <em>extremely clean</em>: just as there are no missing values, there are no clearly incorrect values (e.g.&nbsp;misspellings, upper/lower case issues, values appearing in the wrong columns/truncated/concatenated/etc.).</p>
 <p>Regarding the target population:</p>
 <p><strong>1. Most target customers were employed</strong>: There were eight occupation categories comprising <strong>89.4%</strong> of the population, with blue-collar (21.5%), management (20.9%), and technician (16.8%) being the most common categories. Only 10.0% of customers were not currently employed (retired, unemployed, student) and 0.6% were unknown.</p>
 <p><strong>2. Education varied</strong> in rough alignment with the occupations above: 29.4% had tertiary education, 51.3% secondary, 15.2% primary</p>
 <p><strong>3. Most were married (60.2%)</strong></p>
 <p><strong>4. They were financially stable</strong>: 98.2% were not in default, 55.6% had housing loans and only 16% had personal loans.</p>
-<p>The “previous outcome” field is interesting: <em>3.3% of previous interactions were deemed “successes,”</em> which raises the question why they were called again. 81.7% were “unknown” and 4.1% “other,” so I <em>do not believe this field is very meaningful</em>.</p>
-<p>Finally, <strong><em>11.4% of contacts were successful</em></strong> in selling the product, the goal of the marketing outreach: this is our <strong>label</strong> for supervised ML.</p>
+<p>Regarding the other categorical fields, the “previous outcome” field is interesting: <strong>3.3% of previous interactions were deemed “successes,”</strong> which raises the question why they were called again. 81.7% were “unknown,” which seems to indicate this was their first interaction, and 4.1% “other,” so I <em>do not believe this field is very meaningful</em>.</p>
+<p>Finally, our <strong>label (y)</strong>: <strong><em>11.4% of contacts were successful</em></strong> in selling the product, the goal of the marketing outreach and our label for supervised ML.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># categorical column list</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>cat_cols <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span> </span>
@@ -284,8 +286,8 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 2 yes    5289  11.7</code></pre>
 </div>
 </div>
-<p>Next, we look at our numeric variables for central tendency, spread, and outliers.</p>
-<p>To complete our demographic analysis, I first analyzed <strong>Age</strong>, which shows a solid, <em>mostly working-age adult population</em> in alignment with a bank’s target customer base:</p>
+<p>Next, we look at our <strong>numeric variables</strong> for central tendency, spread, and outliers.</p>
+<p>To complete our demographic analysis, I first looked at <strong>Age</strong>, which shows a solid, <em>mostly working-age adult population</em> in alignment with a bank’s target customer base:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># numerical column list: removed "Day" as it is not a meaningful number</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>df_num <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span> </span>
@@ -312,8 +314,9 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </div>
 </div>
 </div>
-<p>Another numeric column (Avg Balance) tells us more about their financial health. Note that <em>most people owed very little with a few owing quite a lot</em>: given the extreme right skew, this histogram is zoomed in to focus on balances below $5000.</p>
-<p><strong>Average annual balance</strong>: The median annual average balance owed was only $448, with a narrow IQR of $1,480. The max was high but reasonable at $102,127, and there were some small negative balances owed, likely reflecting overpaid accounts. These outliers and negative values will be <em>left alone</em> as they are realistic and potentially meaningful.</p>
+<p>Another numeric column (Avg Balance) tells us more about their financial health. Note that <em>most people owed very little with a few owing quite a lot</em>: given the <strong>extreme right skew</strong>, the histogram below is zoomed in to balances below $5000.</p>
+<p><strong>Average annual balance</strong>: The median annual average balance owed was only $448, with a narrow IQR of $1,480. The max was realistic at $102,127, and there were some small negative balances owed, likely reflecting overpaid accounts.</p>
+<p>These outliers and negative values will be <em>left alone</em> as they are realistic and meaningful.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Avg_Balance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -337,10 +340,13 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </div>
 </div>
 <p>The remaining numeric variables describe the outreach itself:</p>
-<p><strong>1. Median call duration</strong> was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. No negative numbers were found. The outliers will be <em>left alone</em> as they are realistic for long phone calls.</p>
-<p><strong>2. Contacts before this campaign</strong>: This was the first campaign for a large majority of customers (81.9%)</p>
+<p><strong>1. Median call duration</strong> was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds.</p>
+<p>No negative numbers were found. The outliers will be <em>left alone</em> as they are realistic and meaningful.</p>
+<p><strong>2. Contacts before this campaign</strong>: This was the first campaign for a large majority of customers (81.9%). No negative or obviously incorrect values were found.</p>
 <p><strong>3. Contacts this campaign</strong>: The median # of contacts this campaign was two calls, with an IQR of two. The min was one call, which makes sense, but the max ranged up to 63: this seems unusual and could possibly be a data issue but we will <em>leave these outliers alone</em> for now.</p>
-<p><strong>4. Days since last campaign</strong>: This is the first <em>potential problem</em> in the data: the 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause statistical and mathematical issues (see summary for an example). <em>These might be better changed to NA</em>. Ignoring these for now, the histogram below shows values &gt;0, which vary widely with no particular pattern. I’m not clear on the value of this data from a business perspective, but we will see.</p>
+<p><strong>4. Days since last campaign</strong>: This is the <strong>first potential problem</strong> in the data: the 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause statistical and mathematical issues (see summary).</p>
+<p><em>These -1 numeric values might be better changed to NA</em>. Ignoring these for now, the histogram below shows values &gt;0, which vary widely in a multimodal distribution with perhaps a <em>quarterly</em> pattern and a very <em>long tail</em>. I’m not clear on the value of this data, but we will leave it alone.</p>
+<p>Note on other visuals not included: Box plots reflected the distributions and outliers noted above, so I did not include any here.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call Duration</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Duration)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -465,7 +471,7 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 <span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">60</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
 <span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
 <span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">100</span>,<span class="dv">2000</span>)) <span class="sc">+</span></span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">200</span>)) <span class="sc">+</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">90</span>)) <span class="sc">+</span></span>
 <span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Days Since Last Campaign: &gt;0 Days"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
@@ -480,7 +486,9 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 <h2 class="anchored" data-anchor-id="relationships-between-variables">4. Relationships Between Variables</h2>
 <section id="numeric-vs-numeric---correlation-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="numeric-vs-numeric---correlation-analysis">4.1 Numeric vs Numeric - Correlation Analysis</h3>
-<p>A correlation matrix was computed to identify relationships between numeric features. No significant correlations were found, in fact, <em>only one pair of numeric columns had a correlation coefficient (absolute value) over 0.1</em>: “contacts before this campaign” and “days since last campaign”. This makes sense as most (81.4%) of people contacted had zero contacts before this campaign and therefore had a value of -1 days since last campaign.</p>
+<p>A correlation matrix was computed to identify relationships between numeric features.</p>
+<p>No significant correlations were found, in fact, <strong>all pairs had correlation coefficients (absolute value) less than 0.1 except for one</strong>: “contacts before this campaign” and “days since last campaign” had a correlation coefficient of 0.45. This is still low but it makes sense that there is some correlation because over 80% of people contacted had had zero contacts before this campaign and therefore had a value of -1 days since last campaign.</p>
+<p>The <strong>lack of correlation</strong> between columns is more evidence that this dataset was thoroughly <strong>pre-processed</strong>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cor_matrix <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cor</span>(<span class="at">use =</span> <span class="st">"pairwise.complete.obs"</span>)</span>
@@ -516,12 +524,12 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </div>
 </div>
 </div>
-<p>I also tried ggally and scatterplots in case there were non-linear patterns, but they showed no patterns.</p>
-<p>The lack of correlation among these columns is more evidence that this dataset was thoroughly pre-processed.</p>
+<p><em>Other visuals not included here</em>: I tried scatterplots and ggally in case there were non-linear correlation patterns, but they showed nothing of interest.</p>
 </section>
 <section id="numeric-vs-categorical---boxplots" class="level3">
 <h3 class="anchored" data-anchor-id="numeric-vs-categorical---boxplots">4.2 Numeric vs Categorical - Boxplots</h3>
 <p>Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.</p>
+<p>None of the relationships were unexpected, and many were not meaningful at all (month vs.&nbsp;age, for example). However, a few interesting/intuitive pairs are included below as examples.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>num_cols <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
@@ -1304,7 +1312,7 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </section>
 <section id="summary-of-key-findings" class="level3">
 <h3 class="anchored" data-anchor-id="summary-of-key-findings">Summary of Key Findings</h3>
-<p>The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues. Numeric variables are mostly independent, with no strong correlations, which simplifies model selection. Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training. No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.</p>
+<p>The dataset is clean and ready for modeling, with no missing values, duplicates, highly correlated columns, or data quality issues. Numeric variables are mostly independent, with no strong correlations, which simplifies model selection. Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training. No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.</p>
 </section>
 </section>
 <section id="works-cited" class="level2">
