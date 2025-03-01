@@ -110,19 +110,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
 <p>This assignment focuses on <strong>Exploratory Data Analysis (EDA)</strong>, one of the most important steps in data science. Surveys show data scientists spend 60-80% of their time on data prep, and EDA helps <strong><em>identify data gaps, improve quality, and shape better features</em></strong> — all leading to better models.</p>
 <p>The dataset comes from a study by Moro, Cortez, and Rita conducted between 2008 and 2013, where they analyzed telemarketing data from a Portuguese bank to predict the success of selling long-term deposits. The research team applied feature selection and modeling techniques, ultimately comparing logistic regression, decision trees, neural networks, and support vector machines to find the best predictive model.</p>
-<p>For this EDA, I’m using a <strong>pre-processed version</strong> of that original dataset, which has a reduced number of features.</p>
+<p>For this EDA, I’m using a ****pre-processed version**** of that original dataset, which has a reduced number of features.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">#library(corrplot)</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">#library(corrplot)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong><em>1. Dataset Overview</em></strong></p>
+</section>
+<section id="dataset-overview" class="level2">
+<h2 class="anchored" data-anchor-id="dataset-overview">1. Dataset Overview</h2>
 <p>The dataset contains 45,211 records and 17 columns. There are no missing values: as we go through this EDA exercise, it is clear that this dataset has been thoroughly cleaned.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="st">"https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv"</span>,</span>
@@ -303,36 +308,219 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 </div>
 </div>
 </div>
-<p>Moving on to other numeric columns, we learn more about the outreach: call duration, etc.</p>
+<p>Another numeric column (Avg Balance) can tell us more about their financial health. However, most people owed little with a few owing quite a lot: given the extreme right skew, this histogram is zoomed in to focus on balances below $5000, covering the vast majority of customers.</p>
+<p><em>Average annual balance</em>: The median annual average balance owed was only $448, with a narrow IQR of $1,480. The max was quite high at $102,127, and there were some negative balances owed.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Other numeric columns: top 90% only due to skew</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># pivot to support a single faceted histogram</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>df_long <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="fu">everything</span>())</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>plot_hist <span class="ot">&lt;-</span> df_long <span class="sc">%&gt;%</span> </span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(value))<span class="sc">+</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">30</span>,<span class="at">fill=</span><span class="st">"gray80"</span>) <span class="sc">+</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>name, <span class="at">scales =</span> <span class="st">"free"</span>) <span class="sc">+</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>plot_hist</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Avg_Balance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  -8019      72     448    1362    1428  102127 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df_num <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Avg_Balance)) <span class="sc">+</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">1000</span>, <span class="at">fill =</span> <span class="st">"gray80"</span>) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">color=</span><span class="st">"black"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">1000</span>,<span class="dv">8000</span>)) <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1000</span>, <span class="dv">8000</span>, <span class="at">by =</span> <span class="dv">1000</span>)) <span class="sc">+</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Avg Annual Balance: Zoomed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/other_num-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="Assignment_1_Fox_files/figure-html/bal_zoom-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>Next, we look at other numeric variables around the outreach itself:</p>
+<ol type="1">
+<li>Median call duration was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. No negative numbers were found.</li>
+<li>This was the first campaign for a large majority (81.9%)</li>
+<li>Most were contacted fewer than five times this campaign</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Call Duration</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Duration)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0   103.0   180.0   258.2   319.0  4918.0 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_num, <span class="fu">aes</span>(<span class="at">x =</span> Duration)) <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">60</span>, <span class="at">fill =</span> <span class="st">"skyblue"</span>) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">100</span>,<span class="dv">2000</span>)) <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2000</span>, <span class="at">by =</span> <span class="dv">200</span>)) <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Call Duration in Seconds: Zoomed"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Assignment_1_Fox_files/figure-html/outreach-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contacts Before This Campaign</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Contacts_Before_This_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+  0.0000   0.0000   0.0000   0.5803   0.0000 275.0000 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contacts_Before_This_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Contacts =</span> <span class="fu">ifelse</span>(Contacts_Before_This_Campaign <span class="sc">&lt;=</span> <span class="dv">5</span>, </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Contacts_Before_This_Campaign), </span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;5"</span>),</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Contacts) <span class="sc">%&gt;%</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Contacts)) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># Show all rows (helpful in case there's 0-9 and "Other")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `arrange()`.
+ℹ In argument: `..1 = as.numeric(Contacts)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+  Contacts     n   Pct
+  &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;
+1 0        36954  81.7
+2 1         2772   6.1
+3 2         2106   4.7
+4 3         1142   2.5
+5 4          714   1.6
+6 5          459   1  
+7 &gt;5        1064   2  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contacts This Campaign</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Contacts_This_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  1.000   1.000   2.000   2.764   3.000  63.000 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Contacts_This_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Contacts =</span> <span class="fu">ifelse</span>(Contacts_This_Campaign <span class="sc">&lt;=</span> <span class="dv">9</span>, </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Contacts_This_Campaign), </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;9"</span>),</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Contacts) <span class="sc">%&gt;%</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Contacts)) <span class="sc">%&gt;%</span> </span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="cn">Inf</span>)  <span class="co"># Show all rows (helpful in case there's 0-9 and "Other")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `arrange()`.
+ℹ In argument: `..1 = as.numeric(Contacts)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 3
+   Contacts     n   Pct
+   &lt;chr&gt;    &lt;int&gt; &lt;dbl&gt;
+ 1 1        17544  38.8
+ 2 2        12505  27.7
+ 3 3         5521  12.2
+ 4 4         3522   7.8
+ 5 5         1764   3.9
+ 6 6         1291   2.9
+ 7 7          735   1.6
+ 8 8          540   1.2
+ 9 9          327   0.7
+10 &gt;9        1462   2.9</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Days Since Last Campaign</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_num<span class="sc">$</span>Days_Since_Last_Campaign)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   -1.0    -1.0    -1.0    40.2    -1.0   871.0 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Days_Since_Last_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">#  mutate(Pct = round((n / sum(n)) * 100, 1))</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Days =</span> <span class="fu">ifelse</span>(Days_Since_Last_Campaign <span class="sc">&lt;=</span> <span class="dv">5</span>, </span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Days_Since_Last_Campaign), </span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;5"</span>),</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Days) <span class="sc">%&gt;%</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Days)) <span class="sc">%&gt;%</span> </span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  kable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `arrange()`.
+ℹ In argument: `..1 = as.numeric(Days)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Days</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">Pct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">-1</td>
+<td style="text-align: right;">36954</td>
+<td style="text-align: right;">81.7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">0.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">4</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">5</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">0.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">&gt;5</td>
+<td style="text-align: right;">8191</td>
+<td style="text-align: right;">14.4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="pivot-to-support-a-single-faceted-histogram" class="level1">
+<h1>pivot to support a single faceted histogram</h1>
+<p>df_long &lt;- df_num %&gt;% pivot_longer(everything())</p>
+<p>plot_hist &lt;- df_long %&gt;% ggplot(aes(value))+ geom_histogram(bins = 30,fill=“gray80”) + facet_wrap(~name, scales = “free”) + theme_minimal() plot_hist</p>
 <p>plot counts:</p>
 <p>df %&gt;% count(job) %&gt;% ggplot(aes(x = job, y = n)) +<br>
 geom_col() + theme(axis.text.x = element_text(angle = 45, hjust = 1))</p>
+</section>
 <section id="contacts-before-this-campaign" class="level1">
 <h1>contacts before this campaign</h1>
-<p>df_final %&gt;% count(Contacts_Before_This_Campaign) +</p>
+<p>df_final %&gt;% count(Contacts_Before_This_Campaign) %&gt;% mutate(Pct = round((n / sum(n)) * 100, 1))</p>
 </section>
 <section id="contacts-this-campaign" class="level1">
 <h1>contacts this campaign</h1>
