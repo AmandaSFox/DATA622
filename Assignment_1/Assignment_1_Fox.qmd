@@ -9,24 +9,189 @@ This assignment focuses on **Exploratory Data Analysis (EDA)**, one of the most 
 
 The dataset comes from a study by Moro, Cortez, and Rita conducted between 2008 and 2013, where they analyzed telemarketing data from a Portuguese bank to predict the success of selling long-term deposits. The research team applied feature selection and modeling techniques, ultimately comparing logistic regression, decision trees, neural networks, and support vector machines to find the best predictive model. 
 
-For this EDA, I’m using a pre-processed, published version of that dataset, which has a reduced number of features.
+For this EDA, I’m using a **pre-processed version** of that original dataset, which has a reduced number of features. 
 
 ```{r libraries, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(ggplot2)
 library(purrr)
+library(scales)
 library(reshape2)
 #library(corrplot)
 library(GGally)
 ```
 
-1. Dataset Overview
-The dataset contains r nrow(df) records and r ncol(df) columns. It consists of bank customers who were contacted as part of a marketing campaign to promote a special deposit account. The features describe customer demographics, financial history, and prior interactions with the bank’s marketing efforts.
+***1. Dataset Overview***
 
-The goal of this analysis is to review the dataset for data quality, assess variable distributions, and identify any initial patterns or relationships that may help predict customer interest in the deposit account.
+The dataset contains 45,211 records and 17 columns. There are no missing values: as we go through this EDA exercise, it is clear that this dataset has been thoroughly cleaned.
+
+```{r overview, message = FALSE, warning = FALSE}
+df <- read_delim("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv",
+                 delim = ";",
+                 quote = "\"")
+
+glimpse(df)
+
+colSums(is.na(df))
+
+```
+The data consists of bank customers who were contacted as part of a marketing campaign and the features describe customer demographics, financial history, and characteristics of their interactions, as well as a label "y" which indicates whether they did choose the new deposit account.
+
+Before doing further analysis, I changed the column names to be more meaningful: this is my personal preference so that I can more clearly see how the data stacks up against my expectations based on my business knowledge.
+
+Now let's *get to know our population*, starting with the categorical variables:
+
+``` {r col_names}
+df_final <- df %>% 
+  set_names("Age","Occupation","Marital_Status","Education",
+            "In_Default","Avg_Balance","Housing_Loan","Personal_Loan",
+            "Contact_Type","Day","Month","Duration","Contacts_This_Campaign",
+            "Days_Since_Last_Campaign","Contacts_Before_This_Campaign",
+            "Previous_Outcome","Y")
+```
+
+Simple frequency distributions paint a picture of a typical, middle-class, adult population of target customers for banking products:
+
+1. Most were employed: only 10.0% were not currently employed (retired, unemployed, student) and 0.6% were unknown. The remaining 89.4% were split among eight categories, with blue-collar (21.5%), management (20.9%), and technician (16.8%) being the most common.  
+2. Education varied, in alignment with the occupations above: 29.4% had tertiary educatio, 51.3% secondary, 15.2% primary
+3. Most were married (60.2%)
+4. Financially stable: 98.2% were not in default, 55.6% had housing loans and only 16% had personal loans. 
+
+The "previous outcome" field is interesting: 3.3% of previous interactions were deemed "successes," which raises the question why they were called again. 81.7% were "unknown" and 4.1% "other," so I do not believe this field is very meaningful. 
+
+Finally, **11.4%** of contacts resulted in a new deposit account, which was the goal of the marketing outreach.
+
+``` {r frequencies}
+
+# categorical column list
+cat_cols <- df_final %>% 
+  select(where(is.character)) %>%  
+  names()
+
+for (col in cat_cols) {
+   df_final %>%
+    count(.data[[col]]) %>%
+    mutate(Pct = round((n / sum(n)) * 100, 1)) %>%
+    arrange(desc(Pct)) %>% 
+    print()
+}
+
+```
+
+Next, our numeric variables. Note that most of these have very long tails that make histograms difficult; we will handle those with log10 shortly. 
+
+First, to complete our analysis of the population, I broke out Age separately.
+
+This shows a solid, mostly working-age adult population with a nearly normal distribution:
+
+```{r num_dist}
+# numerical column list: removed "Day" as it is not a meaningful number
+df_num <- df_final %>% 
+  select(-Day) %>% 
+  select(where(is.numeric))
+
+# Age
+summary(df_num$Age)
+
+plot_age <- df_num %>% 
+  ggplot(aes(Age))+
+    geom_histogram(bins = 30,fill="seagreen") +
+    scale_x_continuous(breaks = seq(0, 100, by = 5)) +
+    theme_minimal()
+print(plot_age)
+
+```
+
+Another numeric column (Avg Balance) can tell us more about their financial health. However, most people owed little with a few owing quite a lot: given the extreme right skew, this histogram is zoomed in to focus on balances below $5000, covering the vast majority of customers.
+
+*Average annual balance*: The median annual average balance owed was only \$448, with a narrow IQR of \$1,480. The max was quite high at \$102,127, and there were some negative balances owed. 
+
+``` {r bal_zoom}
+
+summary(df_num$Avg_Balance)
+
+df_num %>% 
+  ggplot(aes(x = Avg_Balance)) +
+    geom_histogram(bins = 1000, fill = "gray80") +
+    geom_vline(xintercept = 0, color="black", linetype = "dashed") +
+    coord_cartesian(c(-1000,8000)) +
+    scale_x_continuous(breaks = seq(-1000, 8000, by = 1000)) +
+    theme_minimal() +
+    labs(title = "Avg Annual Balance: Zoomed")
+    
+```
+
+Next, we look at other numeric variables around the outreach itself:
+
+1. Median call duration was 180 seconds, with the longest call = 4918 seconds or over an hour and 20 minutes long. The IQR was 216 seconds, with 50% of calls lasting between 103 and 319 seconds. No negative numbers were found.
+
+
+``` {r outreach}
+
+summary(df_num$Duration)
+
+ggplot(df_num, aes(x = Duration)) +
+  geom_histogram(bins = 60, fill = "skyblue") +
+  theme_minimal() +
+  coord_cartesian(c(-100,2000)) +
+  scale_x_continuous(breaks = seq(0, 2000, by = 200)) +
+  labs(title = "Call Duration in Seconds: Zoomed")
+
+```
+# pivot to support a single faceted histogram
+df_long <- df_num %>% 
+  pivot_longer(everything())
+
+plot_hist <- df_long %>% 
+  ggplot(aes(value))+
+    geom_histogram(bins = 30,fill="gray80") +
+    facet_wrap(~name, scales = "free") +
+    theme_minimal()
+plot_hist
+
+
+plot counts:
+
+df %>% count(job) %>% ggplot(aes(x = job, y = n)) +  
+geom_col() + 
+ theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+
+
+
+
+
+
+
+
+# contacts before this campaign
+df_final %>% 
+  count(Contacts_Before_This_Campaign) +
+  
+
+# contacts this campaign
+df_final %>% 
+  count(Contacts_This_Campaign)
+
+# Bar charts for categorical variables
+for (col in cat_cols) {
+  print(ggplot(df_final, aes_string(x = col, fill = col)) +
+    geom_bar() +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = paste("Bar Chart of", col), x = col, y = "Count"))
+}
+
+
+```
+
+
+
 
 2. Structure & Initial Review
-{r
+```{r
 Copy
 Edit
 glimpse(df)
@@ -154,3 +319,17 @@ The dataset is clean and ready for modeling, with no missing values, duplicates,
 Numeric variables are mostly independent, with no strong correlations, which simplifies model selection.
 Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training.
 No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.
+
+
+
+
+## Works Cited
+
+ChatGPT. “ChatGPT.” Chatgpt.com, 2024, chatgpt.com. Accessed Feb. 2025.  
+  R coding assistance.  
+
+Moro, Sérgio et al. “A data-driven approach to predict the success of bank
+  telemarketing.” Decis. Support Syst. 62 (2014): 22-31. 
+
+Moro, S., P. Rita, and P. Cortez. "Bank Marketing." UCI Machine Learning 
+  Repository, 2014, https://doi.org/10.24432/C5K306. Accessed Feb. 2025.
