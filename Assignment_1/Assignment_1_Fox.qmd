@@ -5,7 +5,7 @@ date: "3/2/2025"
 format: html
 ---
 
-## 1. Introduction
+## 1. EDA: Introduction
 
 This assignment focuses on **Exploratory Data Analysis (EDA)**, one of the most important steps in data science. Surveys show data scientists spend 60-80% of their time on data prep, and EDA helps *identify data gaps, improve quality, and shape better features* — all leading to better models.
 
@@ -275,7 +275,13 @@ Boxplots were used to review how numeric features (e.g., age, balance, duration)
 
 None of the relationships were unexpected, and many were not meaningful at all (month vs. age, for example). However, a few interesting/intuitive pairs are included below as examples.
 
-``` {r box}
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Age%2BOccupation.png)
+  
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Age%2BY.png)
+  
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Duration%2BY.png)
+  
+```r
 num_cols <- df_num %>% 
   names()
 
@@ -295,9 +301,20 @@ for (cat in cat_cols) {
 ```
 
 ### 4.3 Categorical vs Categorical - Stacked Bar Charts
-Relationships between categorical variables were visualized using stacked bar charts.
+Relationships between categorical variables were visualized using stacked bar charts. 
 
-```{r stacked}
+As above, some pairs were not meaningful e.g. month and occupation: below is a sample of some of the more interesting relationships, followed by the code for all pairs. 
+
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/marital%2Boccupation.png)
+  
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/education%2Boccupation.png)
+  
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Y%2Beducation.png)
+  
+![](https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Y%2Boccupation.png)
+  
+
+```r
 
 if (length(cat_cols) > 1) {
   for (i in 1:(length(cat_cols) - 1)) {
@@ -321,11 +338,107 @@ if (length(cat_cols) > 1) {
 }
 ```
 
-### Summary of Key Findings
-The dataset is clean and ready for modeling, with no missing values, duplicates, or data quality issues.
-No unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.
-Numeric variables are all independent.
-Categorical variables exhibit some class imbalance, which may require consideration in model training.
+### EDA Conclusions: 
+  
+The data aligns with expectations for a financial marketing campaign and is a good-sized sample with no missing values, duplicates, or data quality issues.  
+  
+Numeric variables are all independent. Class imbalance is seen in several columns including the label (see below).
+
+The data is clean and nearly ready for modeling, with two issues of note: 
+  
+**1. Negative numbers in Days since last campaign:** The 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause issues in math. Recommend changing to **NA**.
+  
+**2. Class imbalance:** Categorical variables exhibit some class imbalance, particularly the **y variable (11.4% yes)**. This is typical for marketing type data but may require consideration in model training.   
+Other variables with imbalance include "default" (98.2% = no) as well as the related fields "contacts before this campaign" (81.7% = 0) and "days since last contact" (81.7% = -1). These may of be less significance.
+
+
+## Model Recommendations
+
+This is a binary classification problem with a defined target variable in the dataset (y), so this is a supervised machine learning problem. There are over 45,000 records and 16 variables excluding the label, including a mix of numeric and categorical features. Most of the numerical features have a lot of skew, so models that assume a normal distribution will be impacted.
+  
+The business will likely want to balance interpretability and accuracy: I would recommend maximizing **precision** to minimize the number of low-probability calls they make because telemarketing is expensive and the success rate is low. Right now for example, they seem to be calling the same customers over and over in some cases; it would be important to know if this helps or hurts their success rate. 
+  
+However, **interpretability** may be wanted by marketing leadership to better understand why customers say yes vs. no, to help target future campaigns and refine messaging for example. 
+  
+Based on the above, the most suitable algorithms would typically be **logistic regression** or **tree-based models**. Logistic regression is fast and highly interpretable and accessible to business users. It does assume linear relationships but is a good first pass here. Tree models quickly find the best splits between yes/no customers, handle both categorical and numeric variables, but are less interpretable for business users.
+
+Within the models covered in class, none is really recommended: **KNN** is impractical due to computational expense and lack of interpretability. Discriminant models **LDA and QDA** both assume normal distributions and in the case of LDA, equal covariance. **Naive Bayes** assumes categorical features are independent, which the bar charts above demonstrate that they are not, and does not handle skewed numerical variables.
+
+**Recommended:** Tree-based models, logistic regression
+**Not Recommended:** KNN, LDA, QDA, Naive Bayes
+
+## Pre-processing
+
+As shown previously, this dataset was thoroughly pre-processed. No missing values, duplicates, or errors were found. Outliers were identified but retained as reasonable and meaningful. Business context was applied to evaluating the data and no unusual patterns were found. The features provided were appropriate for modeling. 
+  
+I made two improvements to the data:
+1. Replaced -1 with NA in "Days Since Last Campaign" to more accurately identify first time contacts and avoid math issues
+2. Created two new customer segmentation features to combine related features (occupation/education, borrowing profile) and simplify modeling
+
+```{r preprocess}
+
+# Replace -1 with NA
+df_preprocessed <- df_final %>%
+  mutate(Days_Since_Last_Campaign = 
+           ifelse(Days_Since_Last_Campaign == -1, 
+                  NA, 
+                  Days_Since_Last_Campaign))
+
+# Check result
+df_final %>% 
+  count(Days_Since_Last_Campaign) %>% 
+  mutate(
+    Days = ifelse(Days_Since_Last_Campaign <= 5, 
+                      as.character(Days_Since_Last_Campaign), 
+                      ">5"),
+    Pct = round((n / sum(n)) * 100, 1)
+  ) %>%
+  group_by(Days) %>%
+  summarise(n = sum(n), Pct = sum(Pct)) %>%
+  arrange(as.numeric(Days)) %>% 
+  print()
+
+df_preprocessed %>% 
+  count(Days_Since_Last_Campaign) %>% 
+  mutate(
+    Days = ifelse(Days_Since_Last_Campaign <= 5, 
+                      as.character(Days_Since_Last_Campaign), 
+                      ">5"),
+    Pct = round((n / sum(n)) * 100, 1)
+  ) %>%
+  group_by(Days) %>%
+  summarise(n = sum(n), Pct = sum(Pct)) %>%
+  arrange(as.numeric(Days)) %>% 
+  print()
+
+# occupation/education profile feature
+df_preprocessed <- df_preprocessed %>%
+  mutate(Occupation_Education = paste(Occupation, Education, sep = "_"))
+
+df_preprocessed %>%
+  count(Occupation_Education, sort = TRUE) %>%
+  mutate(Pct = round((n / sum(n)) * 100, 1))
+
+# loan profile feature: default, housing, personal loans
+df_preprocessed <- df_preprocessed %>%
+  mutate(Loan_Profile = case_when(
+    Housing_Loan == "yes" & Personal_Loan == "yes" & In_Default == "yes" ~ "Both Loans - In Default",
+    Housing_Loan == "yes" & Personal_Loan == "yes" & In_Default == "no" ~ "Both Loans - No Default",
+    Housing_Loan == "yes" & Personal_Loan == "no" & In_Default == "yes" ~ "Housing Loan - In Default",
+    Housing_Loan == "yes" & Personal_Loan == "no" & In_Default == "no" ~ "Housing Loan - No Default",
+    Housing_Loan == "no" & Personal_Loan == "yes" & In_Default == "yes" ~ "Personal Loan - In Default",
+    Housing_Loan == "no" & Personal_Loan == "yes" & In_Default == "no" ~ "Personal Loan - No Default",
+    Housing_Loan == "no" & Personal_Loan == "no" & In_Default == "yes" ~ "No Loans - In Default",
+    TRUE ~ "No Loans - No Default"
+  ))
+
+# Check result - top combinations
+df_preprocessed %>%
+  count(Loan_Profile, sort = TRUE) %>%
+  mutate(Pct = round((n / sum(n)) * 100, 1))
+
+
+```
 
 ## Works Cited
 

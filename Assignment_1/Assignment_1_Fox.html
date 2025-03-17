@@ -110,8 +110,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">1. Introduction</h2>
+<section id="eda-introduction" class="level2">
+<h2 class="anchored" data-anchor-id="eda-introduction">1. EDA: Introduction</h2>
 <p>This assignment focuses on <strong>Exploratory Data Analysis (EDA)</strong>, one of the most important steps in data science. Surveys show data scientists spend 60-80% of their time on data prep, and EDA helps <em>identify data gaps, improve quality, and shape better features</em> — all leading to better models.</p>
 <p>The dataset comes from a study by Moro, Cortez, and Rita conducted between 2008 and 2013, where they analyzed telemarketing data from a Portuguese bank to predict the success of selling long-term deposits. The research team applied feature selection and modeling techniques, ultimately comparing logistic regression, decision trees, neural networks, and support vector machines to find the best predictive model.</p>
 <p>For this EDA, I’m using a <strong><em>pre-processed version</em></strong> of that original dataset, which has a reduced number of features and shows evidence that it has been thoroughly cleaned, as we will see.</p>
@@ -530,8 +530,10 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 <h3 class="anchored" data-anchor-id="numeric-vs-categorical---boxplots">4.2 Numeric vs Categorical - Boxplots</h3>
 <p>Boxplots were used to review how numeric features (e.g., age, balance, duration) vary across categorical groups like job, education, and marital.</p>
 <p>None of the relationships were unexpected, and many were not meaningful at all (month vs.&nbsp;age, for example). However, a few interesting/intuitive pairs are included below as examples.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>num_cols <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Age%2BOccupation.png" class="img-fluid"></p>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Age%2BY.png" class="img-fluid"></p>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Duration%2BY.png" class="img-fluid"></p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>num_cols <span class="ot">&lt;-</span> df_num <span class="sc">%&gt;%</span> </span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (cat <span class="cf">in</span> cat_cols) {</span>
@@ -547,773 +549,183 @@ $ y         &lt;chr&gt; "no", "no", "no", "no", "no", "no", "no", "no", "no", "n
 <span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(p)</span>
 <span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-4.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-5.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-6.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-7.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-8.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-9.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-10.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-11.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-12.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-13.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-14.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-15.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-16.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-17.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-18.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-19.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-20.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-21.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-22.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-23.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-24.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-25.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-26.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-27.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-28.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-29.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-30.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-31.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-32.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-33.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-34.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-35.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-36.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-37.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-38.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-39.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-40.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-41.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-42.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-43.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-44.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-45.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-46.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-47.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-48.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-49.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-50.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-51.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-52.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-53.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-54.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-55.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-56.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-57.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-58.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-59.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/box-60.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
 </section>
 <section id="categorical-vs-categorical---stacked-bar-charts" class="level3">
 <h3 class="anchored" data-anchor-id="categorical-vs-categorical---stacked-bar-charts">4.3 Categorical vs Categorical - Stacked Bar Charts</h3>
 <p>Relationships between categorical variables were visualized using stacked bar charts.</p>
+<p>As above, some pairs were not meaningful e.g.&nbsp;month and occupation: below is a sample of some of the more interesting relationships, followed by the code for all pairs.</p>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/marital%2Boccupation.png" class="img-fluid"></p>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/education%2Boccupation.png" class="img-fluid"></p>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Y%2Beducation.png" class="img-fluid"></p>
+<p><img src="https://raw.githubusercontent.com/AmandaSFox/DATA622/main/Assignment_1/Y%2Boccupation.png" class="img-fluid"></p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(cat_cols) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(<span class="fu">length</span>(cat_cols) <span class="sc">-</span> <span class="dv">1</span>)) {</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> (i <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">length</span>(cat_cols)) {</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>      cat1 <span class="ot">&lt;-</span> cat_cols[i]</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>      cat2 <span class="ot">&lt;-</span> cat_cols[j]</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df_final, </span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">aes</span>(<span class="at">x =</span> .data[[cat1]], </span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fill =</span> .data[[cat2]])) <span class="sc">+</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_percent</span>()) <span class="sc">+</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Proportion of"</span>, cat2, <span class="st">"within"</span>, cat1),</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> <span class="st">"Proportion"</span>) <span class="sc">+</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">print</span>(p)</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="eda-conclusions" class="level3">
+<h3 class="anchored" data-anchor-id="eda-conclusions">EDA Conclusions:</h3>
+<p>The data aligns with expectations for a financial marketing campaign and is a good-sized sample with no missing values, duplicates, or data quality issues.</p>
+<p>Numeric variables are all independent. Class imbalance is seen in several columns including the label (see below).</p>
+<p>The data is clean and nearly ready for modeling, with two issues of note:</p>
+<p><strong>1. Negative numbers in Days since last campaign:</strong> The 81.7% of first-time outreach customers are denoted here as -1 days since last campaign, which will cause issues in math. Recommend changing to <strong>NA</strong>.</p>
+<p><strong>2. Class imbalance:</strong> Categorical variables exhibit some class imbalance, particularly the <strong>y variable (11.4% yes)</strong>. This is typical for marketing type data but may require consideration in model training.<br>
+Other variables with imbalance include “default” (98.2% = no) as well as the related fields “contacts before this campaign” (81.7% = 0) and “days since last contact” (81.7% = -1). These may of be less significance.</p>
+</section>
+</section>
+<section id="model-recommendations" class="level2">
+<h2 class="anchored" data-anchor-id="model-recommendations">Model Recommendations</h2>
+<p>This is a binary classification problem with a defined target variable in the dataset (y), so this is a supervised machine learning problem. There are over 45,000 records and 16 variables excluding the label, including a mix of numeric and categorical features. Most of the numerical features have a lot of skew, so models that assume a normal distribution will be impacted.</p>
+<p>The business will likely want to balance interpretability and accuracy: I would recommend maximizing <strong>precision</strong> to minimize the number of low-probability calls they make because telemarketing is expensive and the success rate is low. Right now for example, they seem to be calling the same customers over and over in some cases; it would be important to know if this helps or hurts their success rate.</p>
+<p>However, <strong>interpretability</strong> may be wanted by marketing leadership to better understand why customers say yes vs.&nbsp;no, to help target future campaigns and refine messaging for example.</p>
+<p>Based on the above, the most suitable algorithms would typically be <strong>logistic regression</strong> or <strong>tree-based models</strong>. Logistic regression is fast and highly interpretable and accessible to business users. It does assume linear relationships but is a good first pass here. Tree models quickly find the best splits between yes/no customers, handle both categorical and numeric variables, but are less interpretable for business users.</p>
+<p>Within the models covered in class, none is really recommended: <strong>KNN</strong> is impractical due to computational expense and lack of interpretability. Discriminant models <strong>LDA and QDA</strong> both assume normal distributions and in the case of LDA, equal covariance. <strong>Naive Bayes</strong> assumes categorical features are independent, which the bar charts above demonstrate that they are not, and does not handle skewed numerical variables.</p>
+<p><strong>Recommended:</strong> Tree-based models, logistic regression <strong>Not Recommended:</strong> KNN, LDA, QDA, Naive Bayes</p>
+</section>
+<section id="pre-processing" class="level2">
+<h2 class="anchored" data-anchor-id="pre-processing">Pre-processing</h2>
+<p>As shown previously, this dataset was thoroughly pre-processed. No missing values, duplicates, or errors were found. Outliers were identified but retained as reasonable and meaningful. Business context was applied to evaluating the data and no unusual patterns were found. The features provided were appropriate for modeling.</p>
+<p>I made two improvements to the data: 1. Replaced -1 with NA in “Days Since Last Campaign” to more accurately identify first time contacts and avoid math issues 2. Created two new customer segmentation features to combine related features (occupation/education, borrowing profile) and simplify modeling</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(cat_cols) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>(<span class="fu">length</span>(cat_cols) <span class="sc">-</span> <span class="dv">1</span>)) {</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> (i <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">length</span>(cat_cols)) {</span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>      cat1 <span class="ot">&lt;-</span> cat_cols[i]</span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>      cat2 <span class="ot">&lt;-</span> cat_cols[j]</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>      p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df_final, </span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">aes</span>(<span class="at">x =</span> .data[[cat1]], </span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>                      <span class="at">fill =</span> .data[[cat2]])) <span class="sc">+</span></span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span></span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_percent</span>()) <span class="sc">+</span></span>
-<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Proportion of"</span>, cat2, <span class="st">"within"</span>, cat1),</span>
-<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> <span class="st">"Proportion"</span>) <span class="sc">+</span></span>
-<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>        <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span>
-<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">print</span>(p)</span>
-<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace -1 with NA</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>df_preprocessed <span class="ot">&lt;-</span> df_final <span class="sc">%&gt;%</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Days_Since_Last_Campaign =</span> </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>           <span class="fu">ifelse</span>(Days_Since_Last_Campaign <span class="sc">==</span> <span class="sc">-</span><span class="dv">1</span>, </span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>                  <span class="cn">NA</span>, </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>                  Days_Since_Last_Campaign))</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check result</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>df_final <span class="sc">%&gt;%</span> </span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Days_Since_Last_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Days =</span> <span class="fu">ifelse</span>(Days_Since_Last_Campaign <span class="sc">&lt;=</span> <span class="dv">5</span>, </span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Days_Since_Last_Campaign), </span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;5"</span>),</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Days) <span class="sc">%&gt;%</span></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Days)) <span class="sc">%&gt;%</span> </span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `arrange()`.
+ℹ In argument: `..1 = as.numeric(Days)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+  Days      n   Pct
+  &lt;chr&gt; &lt;int&gt; &lt;dbl&gt;
+1 -1    36954  81.7
+2 1        15   0  
+3 2        37   0.1
+4 3         1   0  
+5 4         2   0  
+6 5        11   0  
+7 &gt;5     8191  14.4</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>df_preprocessed <span class="sc">%&gt;%</span> </span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Days_Since_Last_Campaign) <span class="sc">%&gt;%</span> </span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">Days =</span> <span class="fu">ifelse</span>(Days_Since_Last_Campaign <span class="sc">&lt;=</span> <span class="dv">5</span>, </span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">as.character</span>(Days_Since_Last_Campaign), </span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"&gt;5"</span>),</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>)</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Days) <span class="sc">%&gt;%</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n), <span class="at">Pct =</span> <span class="fu">sum</span>(Pct)) <span class="sc">%&gt;%</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">as.numeric</span>(Days)) <span class="sc">%&gt;%</span> </span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `arrange()`.
+ℹ In argument: `..1 = as.numeric(Days)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+  Days      n   Pct
+  &lt;chr&gt; &lt;int&gt; &lt;dbl&gt;
+1 1        15   0  
+2 2        37   0.1
+3 3         1   0  
+4 4         2   0  
+5 5        11   0  
+6 &gt;5     8191  14.4
+7 &lt;NA&gt;  36954  81.7</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># occupation/education profile feature</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>df_preprocessed <span class="ot">&lt;-</span> df_preprocessed <span class="sc">%&gt;%</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Occupation_Education =</span> <span class="fu">paste</span>(Occupation, Education, <span class="at">sep =</span> <span class="st">"_"</span>))</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>df_preprocessed <span class="sc">%&gt;%</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Occupation_Education, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 48 × 3
+   Occupation_Education       n   Pct
+   &lt;chr&gt;                  &lt;int&gt; &lt;dbl&gt;
+ 1 management_tertiary     7801  17.3
+ 2 blue-collar_secondary   5371  11.9
+ 3 technician_secondary    5229  11.6
+ 4 admin._secondary        4219   9.3
+ 5 blue-collar_primary     3758   8.3
+ 6 services_secondary      3457   7.6
+ 7 technician_tertiary     1968   4.4
+ 8 management_secondary    1121   2.5
+ 9 retired_secondary        984   2.2
+10 self-employed_tertiary   833   1.8
+# ℹ 38 more rows</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># loan profile feature: default, housing, personal loans</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>df_preprocessed <span class="ot">&lt;-</span> df_preprocessed <span class="sc">%&gt;%</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Loan_Profile =</span> <span class="fu">case_when</span>(</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">~</span> <span class="st">"Both Loans - In Default"</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">~</span> <span class="st">"Both Loans - No Default"</span>,</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">~</span> <span class="st">"Housing Loan - In Default"</span>,</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">~</span> <span class="st">"Housing Loan - No Default"</span>,</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">~</span> <span class="st">"Personal Loan - In Default"</span>,</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">~</span> <span class="st">"Personal Loan - No Default"</span>,</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>    Housing_Loan <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">&amp;</span> Personal_Loan <span class="sc">==</span> <span class="st">"no"</span> <span class="sc">&amp;</span> In_Default <span class="sc">==</span> <span class="st">"yes"</span> <span class="sc">~</span> <span class="st">"No Loans - In Default"</span>,</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"No Loans - No Default"</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Check result - top combinations</span></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>df_preprocessed <span class="sc">%&gt;%</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Loan_Profile, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Pct =</span> <span class="fu">round</span>((n <span class="sc">/</span> <span class="fu">sum</span>(n)) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 3
+  Loan_Profile                   n   Pct
+  &lt;chr&gt;                      &lt;int&gt; &lt;dbl&gt;
+1 Housing Loan - No Default  20461  45.3
+2 No Loans - No Default      16992  37.6
+3 Both Loans - No Default     4234   9.4
+4 Personal Loan - No Default  2709   6  
+5 Housing Loan - In Default    302   0.7
+6 No Loans - In Default        212   0.5
+7 Personal Loan - In Default   168   0.4
+8 Both Loans - In Default      133   0.3</code></pre>
 </div>
 </div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-4.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-5.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-6.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-7.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-8.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-9.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-10.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-11.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-12.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-13.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-14.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-15.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-16.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-17.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-18.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-19.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-20.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-21.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-22.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-23.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-24.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-25.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-26.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-27.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-28.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-29.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-30.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-31.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-32.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-33.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-34.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-35.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-36.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-37.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-38.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-39.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-40.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-41.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-42.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-43.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-44.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment_1_Fox_files/figure-html/stacked-45.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="summary-of-key-findings" class="level3">
-<h3 class="anchored" data-anchor-id="summary-of-key-findings">Summary of Key Findings</h3>
-<p>The dataset is clean and ready for modeling, with no missing values, duplicates, highly correlated columns, or data quality issues. Numeric variables are mostly independent, with no strong correlations, which simplifies model selection. Categorical variables exhibit some class imbalance, particularly in job, which may require consideration in model training. No surprising or unexpected patterns were found; the data aligns with reasonable expectations for a financial marketing campaign.</p>
-</section>
 </section>
 <section id="works-cited" class="level2">
 <h2 class="anchored" data-anchor-id="works-cited">Works Cited</h2>
