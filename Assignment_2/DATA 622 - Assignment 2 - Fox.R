@@ -17,7 +17,7 @@ library(rpart)
 library(rattle)
 library(ROSE)
 library(pROC)
-
+library(randomForest)
 library(themis)
 library(tidymodels)
 library(caret)
@@ -34,6 +34,25 @@ library(caret)
 
 # Load data
 df <- read_csv("df_preprocessed.csv")
+glimpse(df)
+
+# find highly correlated features (newly added features)
+df_num <- df %>% 
+  select(where(is.numeric))
+cor_matrix <- df_num %>% 
+  cor(use = "pairwise.complete.obs")
+cor_df <- as.data.frame(as.table(cor_matrix)) %>%
+  filter(Var1 != Var2) %>%                    
+  filter(abs(Freq) > 0.1) %>%
+  arrange(desc(abs(Freq)))
+
+cor_df
+
+# ELABORATE ON THIS IN ESSAY
+# remove redundant and highly correlated features
+df <- df %>% 
+  select(-Housing_Loan, -Personal_Loan, -In_Default,
+         -emp.var.rate, -nr.employed)
 glimpse(df)
 
 # Change character cols to factors
@@ -55,7 +74,7 @@ colnames(matrix_metrics) <- c("Model",
 #---------------------------------
 
 # Partition 70/30
-#set.seed()
+#set.seed(2345)
 sample_set <- createDataPartition(y = df$Y, 
                                   p = .7, 
                                   list = FALSE)
@@ -98,6 +117,7 @@ matrix_metrics <- rbind(matrix_metrics,
                           cm_unbal$byClass["F1"],
                           auc_unbal))
 
+matrix_metrics
 
 #---------------------------------
 # 2. Decision Tree: Balanced (ROSE)
@@ -116,7 +136,9 @@ df_bal %>%
   count(Y) %>%
   mutate(percentage = n / sum(n) * 100)
 
-# Make a new tree
+# Make a new tree with balanced data
+#set.seed(1234)
+
 sample_set_bal <- createDataPartition(y = df_bal$Y, 
                                       p = .7, 
                                       list = FALSE)
@@ -133,9 +155,6 @@ summary(dt_bal)
 fancyRpartPlot(dt_bal)
 
 # Test model
-predictions <- predict(dt_bal, newdata = df_bal_test, type = "class")
-
-# Test first model
 predictions_bal <- predict(dt_bal, 
                              newdata = df_bal_test, 
                              type = "class")
@@ -159,10 +178,27 @@ matrix_metrics <- rbind(matrix_metrics,
                           cm_bal$byClass["F1"],
                           auc_bal))
 
+matrix_metrics
+
 #---------------------------------
 # 3. Random Forest: Default settings
 #---------------------------------
 
+# Using same train/test dataset as above (balanced Y)
+
+rf_default <- randomForest(Y ~ ., 
+                           data = df_bal_train)
+
+
+rf_default_predictions <- predict(rf_default, 
+                                  df_bal_test)
+
+# Tuned Random Forest (example - you'll need to define your tuning)
+# tuneGrid <- expand.grid(.mtry=c(2,3,4))
+# rf_tuned <- train(Y ~ ., data = train_df, method = "rf", tuneGrid = tuneGrid)
+# rf_tuned_predictions <- predict(rf_tuned, test_df)
+
+# Evaluate your models using rf_default_predictions and rf_tuned_predictions
 
 
 #---------------------------------

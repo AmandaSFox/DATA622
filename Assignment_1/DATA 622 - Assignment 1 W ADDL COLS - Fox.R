@@ -18,9 +18,11 @@ library(RColorBrewer)
 #---------------------------------
 # Load Data
 #---------------------------------
-url <- "https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank%2Bmarketing/bank-additional/bank-additional/bank-additional-full.csv"
 
 #url <- "https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank-full.csv"
+
+# NEW - WITH ADDITIONAL FIELDS 
+url <- "https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_1/bank%2Bmarketing/bank-additional/bank-additional/bank-additional-full.csv"
 
 df <- read_delim(url,
                  delim = ";",
@@ -39,12 +41,24 @@ colSums(is.na(df))
 nrow(df) - nrow(distinct(df))
 
 # change col names based on documentation
+#df_final <- df %>% 
+#  set_names("Age","Occupation","Marital_Status","Education",
+#            "In_Default","Avg_Balance","Housing_Loan","Personal_Loan",
+#            "Contact_Type","Day","Month","Duration","Contacts_This_Campaign",
+#            "Days_Since_Last_Campaign","Contacts_Before_This_Campaign",
+#            "Previous_Outcome","Y")
+
 df_final <- df %>% 
   set_names("Age","Occupation","Marital_Status","Education",
-            "In_Default","Avg_Balance","Housing_Loan","Personal_Loan",
-            "Contact_Type","Day","Month","Duration","Contacts_This_Campaign",
+            "In_Default","Housing_Loan","Personal_Loan",
+            "Contact_Type","Month","Day","Duration","Contacts_This_Campaign",
             "Days_Since_Last_Campaign","Contacts_Before_This_Campaign",
-            "Previous_Outcome","Y")
+            "Previous_Outcome",
+            "emp.var.rate","cpi","cci","euribor3m","nr.employed",
+            "Y")
+
+glimpse(df_final)
+
 
 #---------------------------------
 # Categorical Variables
@@ -91,13 +105,29 @@ plot_occupation <- df_final %>%
 
 print(plot_occupation)
 
+plot_education <- df_final %>% 
+  ggplot(aes(x = Education, fill = Y)) +
+  geom_bar(fill="pink") +
+  scale_y_continuous(labels = scales::comma, breaks = seq(0, 50000, by = 1000)) +
+  labs(title = "",) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        axis.text.y = element_text(size = 14))
+
+print(plot_education)
+
 #---------------------------------
 # Numeric Variables
 #---------------------------------
 
-# create df of numeric variables except Day (not meaningful for correlations)
+str(df_final)
+
+# create df of numeric variables - note day is now dow
 df_num <- df_final %>% 
-  select(-Day) %>% 
+#  select(-Day) %>% 
   select(where(is.numeric))
 
 #---------------------------------
@@ -121,27 +151,27 @@ plot_age <- df_num %>%
 print(plot_age)
 
 #---------------------------------
-# Avg Balance
-summary(df_num$Avg_Balance)
+# Avg Balance NO LONGER EXISTS
+#summary(df_num$Avg_Balance)
 
-df_num %>% 
-  ggplot(aes(x = Avg_Balance)) +
-  geom_histogram(bins = 1000, fill = "gray80") +
-  geom_vline(xintercept = 0, color="black", linetype = "dashed") +
-  coord_cartesian(c(-1000,12000)) +
-  scale_x_continuous(labels = scales::comma, 
-                     breaks = seq(-1000, 12000, by = 2000)) +
-  scale_y_continuous(labels = scales::comma, 
-                     breaks = seq(0, 50000, by = 1000)) +
-  labs(title = "Avg Annual Balance",
-      subtitle = "Zoomed-In: Actual Max = 104K") +
-  theme_minimal() +
-  theme(legend.position = "none",
-        title = element_text(size = 16),
-        axis.text.x = element_text(size = 14),
-        axis.title.x = element_text(size = 16),
-        axis.title.y = element_text(size = 16),
-        axis.text.y = element_text(size = 14)) 
+#df_num %>% 
+#  ggplot(aes(x = Avg_Balance)) +
+#  geom_histogram(bins = 1000, fill = "gray80") +
+#  geom_vline(xintercept = 0, color="black", linetype = "dashed") +
+#  coord_cartesian(c(-1000,12000)) +
+#  scale_x_continuous(labels = scales::comma, 
+#                     breaks = seq(-1000, 12000, by = 2000)) +
+#  scale_y_continuous(labels = scales::comma, 
+#                     breaks = seq(0, 50000, by = 1000)) +
+#  labs(title = "Avg Annual Balance",
+#      subtitle = "Zoomed-In: Actual Max = 104K") +
+#  theme_minimal() +
+#  theme(legend.position = "none",
+#        title = element_text(size = 16),
+#        axis.text.x = element_text(size = 14),
+#        axis.title.x = element_text(size = 16),
+#        axis.title.y = element_text(size = 16),
+#        axis.text.y = element_text(size = 14)) 
 
 #---------------------------------
 # Call Duration
@@ -208,7 +238,7 @@ df_final %>%
   arrange(as.numeric(Days)) %>% 
   print()
 
-# Remove -1 before charting
+# Remove -1 before charting NO LONGER THERE
 df_days_gt_0 <- df_num %>% 
   select(Days_Since_Last_Campaign) %>% 
   filter(Days_Since_Last_Campaign > 0)
@@ -236,6 +266,13 @@ cor_df <- as.data.frame(as.table(cor_matrix)) %>%
   arrange(desc(abs(Freq)))
 
 cor_df
+
+# DROP SOME: 
+df_final <- df_final %>%
+  select(-emp.var.rate, -nr.employed)  # Drop highly correlated features
+
+df_num <- df_final %>% 
+  select(where(is.numeric))
 
 # plot
 melt_cor <- melt(cor_matrix)
@@ -397,13 +434,29 @@ df_preprocessed %>%
   print()
 
 #---------------------------------
+
+# new - group up education levels (not an issue in old dataset)
+
+df_preprocessed <- df_final %>%
+  mutate(Education2 = case_when(
+    grepl("^basic|^illiterate", 
+          Education, 
+          ignore.case = TRUE) ~ "less.than.hs",
+    TRUE ~ as.character(Education))) 
+
 # occupation/education feature
 df_preprocessed <- df_preprocessed %>%
-  mutate(Occupation_Education = paste(Occupation, Education, sep = "_"))
+  mutate(Occupation_Education = paste(Occupation, Education2, sep = "_"))
 
 df_preprocessed %>%
   count(Occupation_Education, sort = TRUE) %>%
   mutate(Pct = round((n / sum(n)) * 100, 1))
+
+
+tmp <- df_final %>% 
+  group_by(Occupation) %>%
+  summarise(count = n())
+tmp
 
 #---------------------------------
 # loan profile feature: default, housing, personal loans
@@ -419,7 +472,13 @@ df_preprocessed <- df_preprocessed %>%
     TRUE ~ "No Loans - No Default"
   ))
 
+
 df_preprocessed %>%
   count(Loan_Profile, sort = TRUE) %>%
   mutate(Pct = round((n / sum(n)) * 100, 1))
 
+# added language to remove duplicative columns
+glimpse(df_preprocessed)
+df_preprocessed %>%
+#  select(-c(2,4,5,6,7)) %>% 
+  write_csv("df_preprocessed.csv")
