@@ -480,5 +480,5 @@ df_preprocessed %>%
 # added language to remove duplicative columns
 glimpse(df_preprocessed)
 df_preprocessed %>%
-#  select(-c(2,4,5,6,7)) %>% 
+  select(-Occupation_Education)  # Drop education occupation, too many 
   write_csv("df_preprocessed.csv")
