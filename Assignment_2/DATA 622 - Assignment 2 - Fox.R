@@ -2,19 +2,6 @@
 # DATA 622 Assignment 2
 # March 23, 2025
 
-# Experiment List:
-# Decision tree (2)
-#   unbalanced with all features 
-#   balanced Y 
-# Random forest (2)
-#   Default settings
-#   Hyperparameter tuning - grid search
-# Adaboost (2)
-#   Hyperparameter tuning - grid search (2)
-# Metamodel for ensemble method (1)
-
-# also tried with/without Duration
-
 #---------------------------------
 # Libraries
 #---------------------------------
@@ -27,6 +14,9 @@ library(rattle)
 library(ROSE)
 library(pROC)
 library(doParallel)
+library(fastAdaboost)
+library(xgboost)
+library(RColorBrewer)
 
 #library(randomForest)
 #library(themis)
@@ -287,46 +277,8 @@ matrix_metrics <- rbind(matrix_metrics,
 matrix_metrics
 
 #---------------------------------
-# 5. Adaboost: Default model errored out:  There were missing values in resampled performance measures.
+# 5. Adaboost: ada model errored out:  There were missing values in resampled performance measures.
 #---------------------------------
-
-# Additional data prep for adaboost (chatgpt)
-ada_train <- droplevels(df_bal_train)
-summary(ada_train)
-
-# Train default AdaBoost model
-set.seed(567)
-ada_default <- train(Y ~ ., 
-                     data = ada_train, 
-                     method = "ada")
-
-
-# Test model
-predictions_ada <- predict(ada_default, 
-                              newdata = df_bal_test, 
-                              type = "class")
-
-cm_ada <- confusionMatrix(predictions_ada, 
-                             df_bal_test$Y)
-
-probabilities_ada <- predict(ada_default, 
-                                newdata = df_bal_test, 
-                                type = "prob")[, 2]
-
-auc_ada <- auc(roc(df_bal_test$Y, 
-                      probabilities_ada))
-
-# Add metrics to the matrix
-matrix_metrics <- rbind(matrix_metrics, 
-                        c("5 Adaboost Default",
-                          cm_ada$overall["Accuracy"],
-                          cm_ada$byClass["Precision"],
-                          cm_ada$byClass["Recall"],
-                          cm_ada$byClass["F1"],
-                          auc_ada))
-
-matrix_metrics
-
 
 #---------------------------------
 # 5b. Adaboost: Hyperparameter tuned (grid)
@@ -336,32 +288,26 @@ matrix_metrics
 ada_train <- droplevels(df_bal_train)
 str(ada_train)
 
-# Find tunable parameters
-# getModelInfo("ada") 
+# Define tuning grid
+# only one parameter tunable
 
-# Define tuning grid for mtry values, five-fold cross-validation
-# add classProbs = TRUE and twoClassSummary
-
-ada_tuneGrid <- expand.grid(iter = c(25,50,75),
-                            maxdepth = c(1,2),
-                            nu = c(0.01,0.1))
+ada_tuneGrid <- expand.grid(nIter = c(25,50,75),
+                            method = "Adaboost.M1")
 
 ada_control <- trainControl(method = "cv", 
                             number = 5,
                             classProbs = TRUE,
                             summaryFunction = twoClassSummary)
 
-install.packages("devtools")  # if not already installed
-devtools::install_github("kassambara/fastAdaboost")
-library(fastAdaboost)
 
 # Train model (fastAdaboost package with hyperparameter tuning)
-#set.seed(678)
+set.seed(567)
 ada_tuned <- caret::train(Y ~ ., 
                          data = ada_train, 
-                         method = "ada", 
+                         method = "adaboost", #fastAdaboost package 
                          trControl = ada_control, 
                          tuneGrid = ada_tuneGrid,
+                         metric = "ROC",
                          preProcess = c("center","scale"))
 
 # View caret's tuning selection results 
@@ -372,7 +318,7 @@ ada_tuned$finalModel
 # Test model
 predictions_ada_tuned <- predict(ada_tuned, 
                                 newdata = df_bal_test, 
-                                type = "class")
+                                type = "raw")
 
 cm_ada_tuned <- confusionMatrix(predictions_ada_tuned, 
                                df_bal_test$Y)
@@ -386,7 +332,7 @@ auc_ada_tuned <- auc(roc(df_bal_test$Y,
 
 # Add metrics to the matrix
 matrix_metrics <- rbind(matrix_metrics, 
-                        c("6 Adaboost Tuned",
+                        c("5 Adaboost Tuned",
                           cm_ada_tuned$overall["Accuracy"],
                           cm_ada_tuned$byClass["Precision"],
                           cm_ada_tuned$byClass["Recall"],
@@ -395,14 +341,163 @@ matrix_metrics <- rbind(matrix_metrics,
 
 matrix_metrics
 
-
 #---------------------------------
-# 6. Metamodel Ensemble: DT balanced, RF balanced/tuned, 
-# Adaboost balanced/tuned
+# 6. xgBoost: Hyperparameter tuned (grid)
 #---------------------------------
 
+xg_tuneGrid <- expand.grid(nrounds = 100, 
+                           max_depth = c(3,6),
+                           eta = c(0.1, 0.3),
+                           gamma = 0,
+                           colsample_bytree = 1,
+                           min_child_weight = 1,
+                           subsample = 1)
 
+xg_control <- trainControl(method = "cv", 
+                            number = 5,
+                            classProbs = TRUE,
+                            summaryFunction = twoClassSummary)
+
+# Train model
+set.seed(678)
+xg_tuned <- caret::train(Y ~ ., 
+                        data = ada_train, 
+                        method = "xgbTree",  
+                        trControl = xg_control, 
+                        tuneGrid = xg_tuneGrid,
+                        metric = "ROC",
+                        preProcess = c("center","scale"))
+
+# View caret's tuning selection results 
+xg_tuned$bestTune
+xg_tuned$results
+xg_tuned$finalModel
+
+# Test model
+predictions_xg_tuned <- predict(xg_tuned, 
+                                 newdata = df_bal_test, 
+                                 type = "raw")
+
+cm_xg_tuned <- confusionMatrix(predictions_xg_tuned, 
+                                df_bal_test$Y)
+
+probabilities_xg_tuned <- predict(xg_tuned, 
+                                   newdata = df_bal_test, 
+                                   type = "prob")[, 2]
+
+auc_xg_tuned <- auc(roc(df_bal_test$Y, 
+                         probabilities_xg_tuned))
+
+# Add metrics to the matrix
+matrix_metrics <- rbind(matrix_metrics, 
+                        c("6 xgBoost Tuned",
+                          cm_xg_tuned$overall["Accuracy"],
+                          cm_xg_tuned$byClass["Precision"],
+                          cm_xg_tuned$byClass["Recall"],
+                          cm_xg_tuned$byClass["F1"],
+                          auc_xg_tuned))
+
+matrix_metrics
+
+#---------------------------------
+# 6b. xgBoost #2: Hyperparameter refined tuning (grid)
+#---------------------------------
+
+xg_tuneGrid_2 <- expand.grid(nrounds = c(100,200), 
+                           max_depth = c(3,6),
+                           eta = c(0.05, 0.1),
+                           gamma = 0,
+                           colsample_bytree = 1,
+                           min_child_weight = 1,
+                           subsample = 1)
+
+xg_control <- trainControl(method = "cv", 
+                           number = 5,
+                           classProbs = TRUE,
+                           summaryFunction = twoClassSummary)
+
+#matrix_metrics <- matrix_metrics[matrix_metrics[, "Model"] != "7 xgBoost Tuned 2", ]
+
+# Train model
+set.seed(789)
+xg_tuned2 <- caret::train(Y ~ ., 
+                         data = ada_train, 
+                         method = "xgbTree",  
+                         trControl = xg_control, 
+                         tuneGrid = xg_tuneGrid_2,
+                         metric = "ROC",
+                         preProcess = c("center","scale"))
+
+# View caret's tuning selection results 
+xg_tuned2$bestTune
+xg_tuned2$results
+xg_tuned2$finalModel
+
+# Test model
+predictions_xg_tuned2 <- predict(xg_tuned2, 
+                                newdata = df_bal_test, 
+                                type = "raw")
+
+cm_xg_tuned2 <- confusionMatrix(predictions_xg_tuned2, 
+                               df_bal_test$Y)
+
+probabilities_xg_tuned2 <- predict(xg_tuned2, 
+                                  newdata = df_bal_test, 
+                                  type = "prob")[, 2]
+
+auc_xg_tuned2 <- auc(roc(df_bal_test$Y, 
+                        probabilities_xg_tuned2))
+
+# Add metrics to the matrix
+matrix_metrics <- rbind(matrix_metrics, 
+                        c("7 xgBoost Tuned 2",
+                          cm_xg_tuned2$overall["Accuracy"],
+                          cm_xg_tuned2$byClass["Precision"],
+                          cm_xg_tuned2$byClass["Recall"],
+                          cm_xg_tuned2$byClass["F1"],
+                          auc_xg_tuned2))
+
+matrix_metrics
+
+
+#---------------------------------
 # parallel processing stop (chatgpt)
+#---------------------------------
+
 stopCluster(cl)
 registerDoSEQ()
+
+
+#---------------------------------
+# Summary Charts for Essay
+#---------------------------------
+
+df_metrics <- as.data.frame(matrix_metrics)
+df_metrics <- df_metrics %>%
+  mutate(across(c(Accuracy, Precision, Recall, F1, AUC), 
+                ~ round(as.numeric(.),4)))
+
+print(df_metrics)
+
+df_long <- df_metrics %>% 
+  pivot_longer(cols = c(-Model),
+               names_to = "Metric")
+
+plot_compare <- df_long %>%  
+  ggplot(aes(x = reorder(Model, desc(Model)),
+             y = value,
+             fill = Metric)) +
+  geom_bar(stat = "identity", 
+           show.legend = FALSE) +
+  geom_text(aes(label = round(value, 3)), 
+            hjust = -0.1, size = 2.5) +
+  facet_wrap(~ Metric, 
+               scales = "free_y",
+               ncol = 1) +
+  labs(title = "Model Performance by Metric",
+       x = "",
+       y = "")+
+  coord_flip() +
+  theme_minimal()
+plot_compare  
 
