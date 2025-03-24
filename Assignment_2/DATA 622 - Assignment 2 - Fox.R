@@ -16,20 +16,14 @@ library(pROC)
 library(doParallel)
 library(fastAdaboost)
 library(xgboost)
-library(RColorBrewer)
-
-#library(randomForest)
-#library(themis)
-#library(tidymodels)
 
 #---------------------------------
 # Preparations
 #---------------------------------
 
-
 # Load data
-df <- read_csv("df_preprocessed.csv")
-#df <- read_csv("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_2/df_preprocessed.csv")
+#df <- read_csv("df_preprocessed.csv")
+df <- read_csv("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_2/df_preprocessed.csv")
 
 # find highly correlated features (newly added features)
 df_num <- df %>% 
@@ -94,10 +88,6 @@ model_dt_unbal <- rpart(Y ~ .,
                     data = df_unbal_train)
 
 fancyRpartPlot(model_dt_unbal)
-
-# remove classes not found in train & refactor
-#df_unbal_test <- df_unbal_test[!(df_unbal_test$Occupation_Education %in% c("admin._illiterate", "housemaid_illiterate")), ]
-#df_unbal_test$Occupation_Education <- factor(df_unbal_test$Occupation_Education)
 
 # Test first model
 predictions_unbal <- predict(model_dt_unbal, 
@@ -190,10 +180,6 @@ matrix_metrics
 
 # Using same train/test dataset as above (balanced Y)
 
-# Train model (random forest package default: Random Forest model trained using the randomForest package with default settings. 
-#This model was trained on the entire training dataset without any resampling, 
-#cross-validation, or bootstrapping, resulting in a single Random Forest model)
-
 set.seed(345)
 rf_default <- randomForest::randomForest(Y~.,
                                          data = df_bal_train)
@@ -226,7 +212,6 @@ matrix_metrics <- rbind(matrix_metrics,
                           auc_rf_bal))
 
 matrix_metrics
-
 
 #---------------------------------
 # 4. Random Forest: Hyperparameter tuned (grid)
@@ -316,18 +301,35 @@ ada_tuned$results
 ada_tuned$finalModel
 
 # Test model
+
+# ada can't handle one record in test data: 
+# Make a test copy just for AdaBoost
+df_bal_test_ada <- df_bal_test
+
+# Align factor levels for ALL factor columns
+for (col in names(df_bal_test_ada)) {
+  if (is.factor(df_bal_test_ada[[col]]) && col %in% names(ada_train)) {
+    df_bal_test_ada[[col]] <- factor(df_bal_test_ada[[col]], 
+                                     levels = levels(ada_train[[col]]))
+  }
+}
+
+# Now drop any rows with NA introduced by unseen factor levels
+df_bal_test_ada <- df_bal_test_ada %>%
+  drop_na()
+
 predictions_ada_tuned <- predict(ada_tuned, 
-                                newdata = df_bal_test, 
+                                newdata = df_bal_test_ada, 
                                 type = "raw")
 
 cm_ada_tuned <- confusionMatrix(predictions_ada_tuned, 
-                               df_bal_test$Y)
+                               df_bal_test_ada$Y)
 
 probabilities_ada_tuned <- predict(ada_tuned, 
-                                  newdata = df_bal_test, 
+                                  newdata = df_bal_test_ada, 
                                   type = "prob")[, 2]
 
-auc_ada_tuned <- auc(roc(df_bal_test$Y, 
+auc_ada_tuned <- auc(roc(df_bal_test_ada$Y, 
                         probabilities_ada_tuned))
 
 # Add metrics to the matrix
@@ -375,17 +377,17 @@ xg_tuned$finalModel
 
 # Test model
 predictions_xg_tuned <- predict(xg_tuned, 
-                                 newdata = df_bal_test, 
+                                 newdata = df_bal_test_ada, 
                                  type = "raw")
 
 cm_xg_tuned <- confusionMatrix(predictions_xg_tuned, 
-                                df_bal_test$Y)
+                               df_bal_test_ada$Y)
 
 probabilities_xg_tuned <- predict(xg_tuned, 
-                                   newdata = df_bal_test, 
+                                   newdata = df_bal_test_ada, 
                                    type = "prob")[, 2]
 
-auc_xg_tuned <- auc(roc(df_bal_test$Y, 
+auc_xg_tuned <- auc(roc(df_bal_test_ada$Y, 
                          probabilities_xg_tuned))
 
 # Add metrics to the matrix
@@ -403,9 +405,9 @@ matrix_metrics
 # 6b. xgBoost #2: Hyperparameter refined tuning (grid)
 #---------------------------------
 
-xg_tuneGrid_2 <- expand.grid(nrounds = c(100,200), 
+xg_tuneGrid_2 <- expand.grid(nrounds = c(300,500), 
                            max_depth = c(3,6),
-                           eta = c(0.05, 0.1),
+                           eta = c(0.1, 0.3, 0.5, 0.7),
                            gamma = 0,
                            colsample_bytree = 1,
                            min_child_weight = 1,
@@ -416,10 +418,10 @@ xg_control <- trainControl(method = "cv",
                            classProbs = TRUE,
                            summaryFunction = twoClassSummary)
 
-#matrix_metrics <- matrix_metrics[matrix_metrics[, "Model"] != "7 xgBoost Tuned 2", ]
+matrix_metrics <- matrix_metrics[matrix_metrics[, "Model"] != "7 xgBoost Tuned 2", ]
 
 # Train model
-set.seed(789)
+set.seed(7890)
 xg_tuned2 <- caret::train(Y ~ ., 
                          data = ada_train, 
                          method = "xgbTree",  
@@ -435,17 +437,17 @@ xg_tuned2$finalModel
 
 # Test model
 predictions_xg_tuned2 <- predict(xg_tuned2, 
-                                newdata = df_bal_test, 
+                                newdata = df_bal_test_ada, 
                                 type = "raw")
 
 cm_xg_tuned2 <- confusionMatrix(predictions_xg_tuned2, 
-                               df_bal_test$Y)
+                                df_bal_test_ada$Y)
 
 probabilities_xg_tuned2 <- predict(xg_tuned2, 
-                                  newdata = df_bal_test, 
+                                  newdata = df_bal_test_ada, 
                                   type = "prob")[, 2]
 
-auc_xg_tuned2 <- auc(roc(df_bal_test$Y, 
+auc_xg_tuned2 <- auc(roc(df_bal_test_ada$Y, 
                         probabilities_xg_tuned2))
 
 # Add metrics to the matrix
@@ -459,6 +461,10 @@ matrix_metrics <- rbind(matrix_metrics,
 
 matrix_metrics
 
+df_metrics <- as.data.frame(matrix_metrics)
+df_metrics <- df_metrics %>%
+  mutate(across(c(Accuracy, Precision, Recall, F1, AUC), ~ round(as.numeric(.), 4)))
+df_metrics
 
 #---------------------------------
 # parallel processing stop (chatgpt)
@@ -469,7 +475,7 @@ registerDoSEQ()
 
 
 #---------------------------------
-# Summary Charts for Essay
+# Summary Charts for Essay - not used
 #---------------------------------
 
 df_metrics <- as.data.frame(matrix_metrics)
