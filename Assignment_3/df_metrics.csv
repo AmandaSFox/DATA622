@@ -1,0 +1,8 @@
+Model,Accuracy,Precision,Recall,F1,AUC
+1 Tree Unbalanced Y,0.8978,0.9028,0.9915,0.9451,0.6826
+2 Tree Balanced Y,0.8542,0.8331,0.887,0.8592,0.8936
+3 Random Forest Default,0.8973,0.8925,0.9041,0.8983,0.9601
+4 Random Forest Tuned,0.8974,0.8868,0.9117,0.8991,0.9598
+5 Adaboost Tuned,0.8916,0.8734,0.9167,0.8945,0.9562
+6 xgBoost Tuned,0.8941,0.8749,0.9204,0.8971,0.9585
+7 xgBoost Tuned 2,0.8963,0.8757,0.9245,0.8994,0.9605
