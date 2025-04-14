@@ -507,3 +507,12 @@ plot_compare <- df_long %>%
   theme_minimal()
 plot_compare  
 
+# ------------------------------------
+# WRITE TABLES TO BE USED IN ASSIGNMENT 3:
+# ------------------------------------
+
+write_csv(df_bal,"df_bal.csv")
+write_csv(df_bal_test,"df_bal_test.csv")
+write_csv(df_bal_test_ada,"df_bal_test_ada.csv")
+write_csv(df_bal_train,"df_bal_train.csv")
+write_csv(df_metrics,"df_metrics.csv")
