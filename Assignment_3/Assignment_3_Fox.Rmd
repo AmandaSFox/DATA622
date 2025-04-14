@@ -2,7 +2,7 @@
 title: "Assignment_3_Fox"
 author: "Amanda Fox"
 date: "2025-04-13"
-output: pdf_document
+output: html_document
 ---
   
 ## Introduction
@@ -23,11 +23,11 @@ library(doParallel)
   
 ## Load data 
   
-The metrics from Assignment 2 are loaded and stored as a data frame for later comparison to the SVM models.
-  
+First the metrics from Assignment 2 are loaded and stored as a data frame for later comparison to the SVM models. 
+
 The balanced train and test datasets from Assignment 2 are then loaded and character columns are converted to factors, with the target variable Y explicitly ordered. 
   
-```{r load}
+```{r load, message=FALSE, warning=FALSE}
 
 # Import matrix of metrics for each algorithm tested in Assignment 2 for comparison
 df_metrics <- read_csv("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_3/df_metrics.csv")
@@ -103,7 +103,8 @@ test_svm <- predict(preproc, df_bal_test)
   
 Using the caret package, an SVM with a linear kernel is trained with 5-fold cross-validation. The cost parameter is tuned over three values with precision used as the optimization metric.
   
-```{r svm_linear}
+```{r svm_linear, eval=FALSE}
+
 set.seed(123)
 
 # train model
@@ -120,6 +121,8 @@ svm_linear <- train(
   metric = "Precision",
   tuneGrid = expand.grid(C = c(0.1, 1, 10))
 )
+
+save(svm_linear, file = "prob_svm_linear.RData")
 
 # Keep only rows in test set where Loan_Profile exists in training set
 test_svm <- test_svm[test_svm$Loan_Profile %in% levels(train_svm$Loan_Profile), ]
@@ -144,50 +147,44 @@ matrix_metrics <- rbind(matrix_metrics,
                           cm_svm_linear$byClass["F1"],
                           auc_svm_linear))
 
-# convert to df and change to numeric values
-df_svm_metrics <- as.data.frame(matrix_metrics)
-
-df_svm_metrics <- df_svm_metrics %>%
-  mutate(
-    Accuracy = as.numeric(Accuracy),
-    Precision = as.numeric(Precision),
-    Recall = as.numeric(Recall),
-    F1 = as.numeric(F1),
-    AUC = as.numeric(AUC)
-  )
-
-# create all metrics table
-df_all_metrics <- bind_rows(df_metrics, df_svm_metrics)
-df_all_metrics
-
-# write to csv as temp table
-write_csv(df_all_metrics,"df_all_metrics_temp.csv")
 ```
   
 ## SVM RBF Kernel: Train and Test
   
-An SVM with a radial basis function (RBF) kernel is also trained with 5-fold cross-validation. The cost and sigma parameters are selected by randomized search with precision used as the optimization metric.
+An SVM with a radial basis function (RBF) kernel is also trained with 5-fold cross-validation. 
+
+The cost and sigma parameters are limited due to memory issues to two values for c (1, 10) and the median estimated sigma value (.51). Precision was again used as the optimization metric.
   
-```{r svm_rbf}
+```{r svm_rbf, eval=FALSE}
+
 # Set the same seed for all SVM models to ensure consistent cross-validation folds
 set.seed(123)
 
-# Train model
+# estimate sigma values: sigma = 1/(2*gamma) in caret
+sigest(Y ~ ., data = train_svm)
+
+set.seed(123)
+
+# Train on median value for sigma and two values for C due to memory issues
 svm_radial <- train(
   Y ~ ., 
   data = train_svm, 
   method = "svmRadial",
   trControl = trainControl(
-    method = "cv",
+    method = "cv", 
     number = 5,
     classProbs = TRUE,
     summaryFunction = prSummary,
-    search = "random",
     verboseIter = TRUE
   ),
   metric = "Precision",
-  tuneLength = 3
+  tuneGrid = expand.grid(
+    C = c(1, 10),
+    sigma = c(0.05139891)
+  )
 )
+
+save(svm_radial, file = "prob_svm_radial.RData")
 
 # Predict on test set
 pred_svm_radial <- predict(svm_radial, newdata = test_svm)
@@ -224,9 +221,13 @@ df_svm_metrics <- df_svm_metrics %>%
   
 The results of the two SVM models and all models from Assignment 2 are compared in a table and bar chart.
   
-```{r compare}
+```{r compare, message=FALSE, warning=FALSE}
 
-# create final all metrics table
+# Import SVM metrics from earlier sessions
+df_svm_metrics <- read_csv("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_3/df_svm_metrics_new.csv")
+df_svm_metrics
+
+# Combine with metrics from Assignment 2 to create all metrics table
 df_all_metrics <- bind_rows(df_metrics, df_svm_metrics)
 df_all_metrics
 

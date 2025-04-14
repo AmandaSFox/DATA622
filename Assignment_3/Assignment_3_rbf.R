@@ -89,115 +89,42 @@ preproc <- preProcess(df_bal_train,
 train_svm <- predict(preproc, df_bal_train)
 test_svm <- predict(preproc, df_bal_test)
 
+###############################################################
 
-#-------------------------------
-# Train and test: SVM Linear Kernel
-#-------------------------------
-
-set.seed(123)
-
-# linear kernel: linear boundaries, higher bias, lower variance
-# five fold cross validation, PRECISION as metric
-
-# Using the caret package, we train an SVM with a linear decision boundary
-# and 5-fold cross-validation and tune the cost parameter (C). Smaller C values result in simpler boundaries 
-# with higher bias, while larger values allow more complex fits with higher variance.
-# We evaluate model performance using ROC AUC and choose the best model based on this metric.
-
-
-# train model
-svm_linear <- train(
-  Y ~ ., 
-  data = train_svm, 
-  method = "svmLinear",
-  trControl = trainControl(
-    method = "cv", 
-    number = 5,
-    classProbs = TRUE,
-    summaryFunction = prSummary
-  ),
-  metric = "Precision",
-  tuneGrid = expand.grid(C = c(0.1, 1, 10))
-)
-
-# Keep only rows in test set where Loan_Profile exists in training set
-test_svm <- test_svm[test_svm$Loan_Profile %in% levels(train_svm$Loan_Profile), ]
-
-# Drop unused factor levels to avoid warnings
-test_svm$Loan_Profile <- droplevels(test_svm$Loan_Profile)
-
-
-# Predict on test set
-pred_svm_linear <- predict(svm_linear, newdata = test_svm)
-prob_svm_linear <- predict(svm_linear, newdata = test_svm, type = "prob")[, 2]
-
-# Confusion matrix and AUC
-cm_svm_linear <- confusionMatrix(pred_svm_linear, test_svm$Y)
-auc_svm_linear <- auc(roc(test_svm$Y, prob_svm_linear))
-
-# add metrics to the matrix 
-matrix_metrics <- rbind(matrix_metrics, 
-                        c("8 SVM Linear",
-                          cm_svm_linear$overall["Accuracy"],
-                          cm_svm_linear$byClass["Precision"],
-                          cm_svm_linear$byClass["Recall"],
-                          cm_svm_linear$byClass["F1"],
-                          auc_svm_linear))
-
-matrix_metrics
-
-# convert to df and change to numeric values
-df_svm_metrics <- as.data.frame(matrix_metrics)
-
-df_svm_metrics <- df_svm_metrics %>%
-  mutate(
-    Accuracy = as.numeric(Accuracy),
-    Precision = as.numeric(Precision),
-    Recall = as.numeric(Recall),
-    F1 = as.numeric(F1),
-    AUC = as.numeric(AUC)
-  )
-
-# create all metrics table
-df_all_metrics <- bind_rows(df_metrics, df_svm_metrics)
-df_all_metrics
-
-#write_csv(df_all_metrics,"df_all_metrics_temp.csv")
-
-
-#-------------------------------
-# Train and test: SVM RBF Kernel
-#-------------------------------
-
-# radial kernel, five fold cross validation, Precision as metric
+##############################################
+#FIGURE OUT RBF ERRORS
+##############################################
 
 # Set the same seed for all SVM models to ensure consistent cross-validation folds
-# This allows fair comparison between linear and radial kernels using the same data splits
-
 set.seed(123)
 
 # estimate sigma values: sigma = 1/(2*gamma) in caret
 sigest(Y ~ ., data = train_svm)
-sigest
 
-# train model
-#svm_radial <- train(
-#  Y ~ ., 
-#  data = train_svm, 
-#  method = "svmRadial",
-#  trControl = trainControl(
-#    method = "cv", 
-#    number = 5,
-#    classProbs = TRUE,
-#    summaryFunction = prSummary
-#  ),
-#  metric = "Precision",
-#  tuneGrid = expand.grid(
-#    C = c(1, 10),
-#    sigma = c(0.05, 0.09)
-#  )
-#)
+set.seed(123)
 
+# Train on median value for sigma and two values for C due to memory issues
+svm_radial <- train(
+  Y ~ ., 
+  data = train_svm, 
+  method = "svmRadial",
+  trControl = trainControl(
+    method = "cv", 
+    number = 5,
+    classProbs = TRUE,
+    summaryFunction = prSummary,
+    verboseIter = TRUE
+  ),
+  metric = "Precision",
+  tuneGrid = expand.grid(
+    C = c(1, 10),
+    sigma = c(0.05139891)
+  )
+)
+
+
+###############################
+# Train model RANDOM
 svm_radial <- train(
   Y ~ ., 
   data = train_svm, 
@@ -211,11 +138,26 @@ svm_radial <- train(
     verboseIter = TRUE
   ),
   metric = "Precision",
-  tuneLength = 4
+  tuneLength = 3
 )
 
-# add metrics to the matrix 
+save(svm_radial, file = "prob_svm_radial.RData")
 
+# Keep only rows in test set where Loan_Profile exists in training set
+test_svm <- test_svm[test_svm$Loan_Profile %in% levels(train_svm$Loan_Profile), ]
+
+# Drop unused factor levels to avoid warnings
+test_svm$Loan_Profile <- droplevels(test_svm$Loan_Profile)
+
+# Predict on test set
+pred_svm_radial <- predict(svm_radial, newdata = test_svm)
+prob_svm_radial <- predict(svm_radial, newdata = test_svm, type = "prob")[, 2]
+
+# Confusion matrix and AUC
+cm_svm_radial <- confusionMatrix(pred_svm_radial, test_svm$Y)
+auc_svm_radial <- auc(roc(test_svm$Y, prob_svm_radial))
+
+# add metrics to the matrix 
 matrix_metrics <- rbind(matrix_metrics, 
                         c("9 SVM Radial",
                           cm_svm_radial$overall["Accuracy"],
@@ -236,17 +178,16 @@ df_svm_metrics <- df_svm_metrics %>%
     AUC = as.numeric(AUC)
   )
 
-# create all metrics table
+
+df_svm_metrics
+
+# Import SVM metrics from earlier sessions
+df_svm_metrics <- read_csv("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_3/df_svm_metrics_new.csv")
+df_svm_metrics
+
+# Combine with metrics from Assignment 2 to create all metrics table
 df_all_metrics <- bind_rows(df_metrics, df_svm_metrics)
 df_all_metrics
-
-
-#---------------------------------
-# Compare all models and make bar chart
-#---------------------------------
-
-df_all_metrics
-
 
 # Pivot for ggplot
 df_long <- df_all_metrics %>% 
@@ -270,16 +211,15 @@ plot_compare <- df_long %>%
        y = "")+
   coord_flip() +
   theme_minimal()
+
 plot_compare  
 
+## Cleanup
 
-#---------------------------------
-# parallel processing stop 
-#---------------------------------
 stopCluster(cl)
 registerDoSEQ()
 
-
+######################################################
 
   # check for error: test set has unrecognized factor not in train
   
