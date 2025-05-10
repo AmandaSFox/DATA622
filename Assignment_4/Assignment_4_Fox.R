@@ -7,6 +7,10 @@
 
 library(tidyverse)
 library(fastDummies)
+library(randomForest)
+library(pROC)
+library(caret)
+library(nnet)
 library(ggplot2)
 library(summarytools)
 library(scales)
@@ -28,13 +32,28 @@ missing_chgs <- df_raw %>%
 missing_chgs
 
 df_raw <- df_raw %>%
-  filter(!is.na(TotalCharges)) #removed records: too new for churn model
+  filter(!is.na(TotalCharges)) #removed records: tenure = 0, too new for churn model
 
 # Duplicate rows
 sum(duplicated(df_raw)) # no duplicate rows found
 
+glimpse(df_model)
+
+summary_stats <- df_model %>% 
+  summarize(
+    `Customers` = n(),
+    `Churn %` = mean(Churn == 1),
+    `Mean Tenure` = mean(tenure, na.rm = TRUE),
+    `Mean Monthly Charges` = mean(MonthlyCharges, na.rm = TRUE),
+    `% Month to Month` = mean(`Contract_Month-to-month` == 1), 
+    `% Phone Services` = mean(Phone_Svc == 1),
+    `% Internet Services` = mean(Internet_Svc == 1)) %>%
+  pivot_longer(cols = everything(), names_to = "Metric", values_to = "Value")
+
+summary_stats 
+
 #--------------------------------
-# Prepare Data: Fix Data Types for Modeling
+# Prepare Data for Modeling
 #--------------------------------
 
 # Standardize flags to numeric 0/1: 
@@ -54,16 +73,18 @@ yesno_counts_before <- df_raw %>%
   select(all_of(yesno_cols)) %>%
   pivot_longer(cols = everything(), names_to = "variable", values_to = "value") %>%
   count(variable, value) %>%
-  arrange(variable, desc(n))
+  arrange(variable, desc(n)) %>% 
+  pivot_wider(names_from = value, values_from = n)
 
 yesno_counts_before
 
 # Manual one-hot encoding:
 # create new flag cols for "Phone Svc" and "Internet Svc" using values in existing cols
 
+glimpse(df_raw)
 df_model <- df_raw %>%
   # create binary flag for phone service
-  Phone_Svc = if_else(PhoneService == "Yes", 1, 0) %>% 
+  mutate(Phone_Svc = if_else(PhoneService == "Yes", 1, 0)) %>%  
   # create binary flags for internet service and type
   mutate(Internet_Svc = if_else(InternetService == "No", 0, 1),
          DSL    = if_else(InternetService == "DSL", 1, 0),
@@ -73,17 +94,12 @@ df_model <- df_raw %>%
 df_model %>% 
   count(InternetService, Internet_Svc, DSL,Fiber)
 df_model %>% 
-  count(PhoneService, Phone_Svc)
+  count(PhoneService, MultipleLines, Phone_Svc)
 
-# Recheck cols with internet and phone service flags 
-df_model %>%
-  count(Internet_Svc,OnlineSecurity) %>%
-  arrange(OnlineSecurity)
-
-df_model %>%
-  count(Phone_Svc,MultipleLines) %>%
-  arrange(MultipleLines)
-
+# remove old columns
+df_model <- df_model %>% 
+  select(-InternetService, -PhoneService)
+  
 # One-Hot encoding using package (gender, contract, and payment types)
 
 # gender
@@ -103,8 +119,6 @@ df_model <- df_model %>%
     select_columns = c("PaymentMethod", "Contract", "gender"),
     remove_selected_columns = TRUE
   )
-
-glimpse(df_model)
 
 # Clean up all binary flags to 0/1 (treat "No service" as 0)
 df_model <- df_model %>% 
@@ -136,14 +150,123 @@ yesno_counts_after <- df_model %>%
   select(all_of(yesno_cols_after)) %>%
   pivot_longer(cols = everything(), names_to = "variable", values_to = "value") %>%
   count(variable, value) %>%
-  arrange(variable, desc(n))
+  arrange(variable, desc(n)) %>% 
+  pivot_wider(names_from = value, values_from = n) %>% 
+  mutate(pct_yes = `1`/(`0`+`1`))
 
-# Recheck cols with internet and phone service flags 
-df_model %>%
-  count(OnlineSecurity, Internet_Svc) %>%
-  arrange(OnlineSecurity)
+yesno_counts_after
 
-df_model %>%
-  count(MultipleLines, Phone_Svc) %>%
-  arrange(MultipleLines)
+# convert target variable to factor
+df_model$Churn <- as.factor(df_model$Churn)
 
+glimpse(df_model)
+
+#-----------------------------------
+# Modeling Preparation: Train/Test Data
+#-----------------------------------
+
+# initialize matrix to store metrics for all models
+model_results <- matrix(nrow = 4, ncol = 5,
+                        dimnames = list(
+                          c("RF_default", "RF_tuned", "NN_simple", "NN_deep"),
+                          c("Accuracy", "Precision", "Recall", "F1", "AUC")
+                        ))
+
+# Train/test split 70/30
+train_index <- sample(nrow(df_model), 0.7 * nrow(df_model))
+df_train <- df_model[train_index, ]
+df_test  <- df_model[-train_index, ]
+
+# Make sure df_test has the same columns as df_train
+missing_cols <- setdiff(names(df_train), names(df_test))
+df_test[missing_cols] <- 0
+df_test <- df_test[, names(df_train)]
+
+missing_cols_rev <- setdiff(names(df_test), names(df_train))
+df_train[missing_cols_rev] <- 0
+df_train <- df_train[, names(df_test)]
+
+# fix names with special characters for random forest (one hot encoded)
+names(df_train) <- make.names(names(df_train))
+names(df_test) <- make.names(names(df_test))
+
+#-----------------------------------
+# Model #1: random forest default parameters
+#-----------------------------------
+
+# Default Random Forest (note: exclude customerID from predictors)
+rf_model <- randomForest(Churn ~ . - customerID, 
+                         data = df_train, 
+                         ntree = 500, 
+                         importance = TRUE)
+
+
+# Get predictions and probabilities
+rf_preds <- predict(rf_model, newdata = df_test)
+rf_probs <- predict(rf_model, newdata = df_test, type = "prob")[, 2]
+
+# Confusion matrix
+cm <- confusionMatrix(rf_preds, df_test$Churn, positive = "1")
+cm
+
+# AUC
+rf_roc <- roc(df_test$Churn, rf_probs)
+rf_auc <- auc(rf_roc)
+
+# Store values in matrix
+model_results["RF_default", "Accuracy"]  <- cm$overall["Accuracy"]
+model_results["RF_default", "Precision"] <- cm$byClass["Precision"]
+model_results["RF_default", "Recall"]    <- cm$byClass["Recall"]
+model_results["RF_default", "F1"]        <- cm$byClass["F1"]
+model_results["RF_default", "AUC"]       <- rf_auc
+
+model_results
+
+
+#-----------------------------------
+# Model #2: random forest tuned parameters
+#-----------------------------------
+
+set.seed(42)
+# find best mtry value
+best_mtry <- tuneRF(
+  x = df_train %>% select(-Churn, -customerID),
+  y = df_train$Churn,
+  ntreeTry = 500,
+  stepFactor = 1.5,
+  improve = 0.01,
+  trace = TRUE,
+  plot = TRUE
+)
+
+# extract best mtry
+best_m <- best_mtry[which.min(best_mtry[, 2]), 1]
+
+# retrain w best mtry
+rf_model_tuned <- randomForest(
+  Churn ~ . - customerID,
+  data = df_train,
+  ntree = 500,
+  mtry = best_m,
+  importance = TRUE
+)
+
+# Predictions
+rf_tuned_preds <- predict(rf_model_tuned, newdata = df_test)
+rf_tuned_probs <- predict(rf_model_tuned, newdata = df_test, type = "prob")[, 2]
+
+# Confusion matrix and AUC
+cm_tuned <- confusionMatrix(rf_tuned_preds, df_test$Churn, positive = "1")
+rf_tuned_roc <- roc(df_test$Churn, rf_tuned_probs)
+rf_tuned_auc <- auc(rf_tuned_roc)
+
+cm_tuned
+
+# Store in matrix
+model_results["RF_tuned", "Accuracy"]  <- cm_tuned$overall["Accuracy"]
+model_results["RF_tuned", "Precision"] <- cm_tuned$byClass["Precision"]
+model_results["RF_tuned", "Recall"]    <- cm_tuned$byClass["Recall"]
+model_results["RF_tuned", "F1"]        <- cm_tuned$byClass["F1"]
+model_results["RF_tuned", "AUC"]       <- rf_tuned_auc
+
+model_results
