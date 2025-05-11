@@ -1,9 +1,20 @@
-# Assignment 4
-# Predicting Churn in Telecommunications
+---
+title: "DATA 622 - Assignment 4 - Fox"
+author: "Amanda Fox"
+date: "2025-05-11"
+output: html_document
+---
 
-#-----------------------------------
-# Libraries
-#-----------------------------------
+  
+## Introduction
+  
+This document contains all code for Assignment 4. The business goal is to predict customer churn for a fictional telecommunications company using the "Telco Customer Churn" dataset sourced from Kaggle. 
+
+Two modeling approaches are used: random forest and neural networks, with both default and tuned versions of each. All models are evaluated on multiple metrics, which are stored in a matrix for comparison. Balanced performance is important but recall is prioritized somewhat, reflecting the desire to capture as many at-risk customers as possible due to the high cost of a lost customer. 
+  
+## Load libraries
+  
+```{r libraries, message=FALSE, warning=FALSE}
 
 library(tidyverse)
 library(fastDummies)
@@ -12,99 +23,105 @@ library(pROC)
 library(caret)
 library(nnet)
 library(scales)
+```
 
-#-----------------------------------
-# Data Prep
-#-----------------------------------
+
+## Data Prep
+
+### Load data
+
+```{r load, message=FALSE, warning=FALSE}
 
 # Load data
 df_raw <- read_csv("https://raw.githubusercontent.com/AmandaSFox/DATA622/refs/heads/main/Assignment_4/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
+# View raw dataset
 glimpse(df_raw)
+```
+  
+### Handle missing values and duplicate records 
 
-# Missing values: 
-colSums(is.na(df_raw)) #11 missing TotalCharges
-
-missing_chgs <- df_raw %>% 
-  filter(is.na(TotalCharges)) #these records have tenure = 0 and no charges
-missing_chgs
-
-df_raw <- df_raw %>%
-  filter(!is.na(TotalCharges)) #removed records: tenure = 0, too new for churn model
+This dataset is preprocessed and very clean: no duplicate records were found and only 11 NA values. All NA values were in the "Total Charges" column and associated with brand new accounts. These were removed from the dataset as not useful for churn analysis.
+  
+```{r clean}
 
 # Duplicate rows
-sum(duplicated(df_raw)) # no duplicate rows found
+sum(duplicated(df_raw))
 
-#--------------------------------
-# Prepare Data for Modeling
-#--------------------------------
+# Count NA values by column
+colSums(is.na(df_raw)) 
 
-# Standardize flags to numeric 0/1: 
-# OK for trees and necessary for neural networks
+# View NA data
+missing_chgs <- df_raw %>% 
+  filter(is.na(TotalCharges)) # All have tenure = 0
+missing_chgs
 
-# List of flag cols with char type and Yes/No values
-yesno_cols <- c("Partner", "Dependents", "PhoneService", "MultipleLines",
-                "OnlineSecurity", "OnlineBackup", "DeviceProtection",
-                "TechSupport", "StreamingTV", "StreamingMovies",
-                "PaperlessBilling", "Churn")  
+# Remove NA rows
+df_raw <- df_raw %>%
+  filter(!is.na(TotalCharges)) 
 
-# Original values in columns
+```
+  
+## Feature Engineering and Transformation
+  
+### Standardize flags to numeric 0/1 and extract service type details 
+  
+The dataset includes character flags which are transformed to numeric (0/1) as required by neural networks. One-hot encoding was used for four columns with >2 values to preserve information about service types, and the remaining binary columns were converted to 0/1 numeric columns. 
 
-yesno_counts_before <- df_raw %>%
-  select(all_of(yesno_cols)) %>%
-  pivot_longer(cols = everything(), names_to = "variable", values_to = "value") %>%
-  count(variable, value) %>%
-  arrange(variable, desc(n)) %>% 
-  pivot_wider(names_from = value, values_from = n)
+Finally, the target variable is transformed to a factor to force the random forest models to classification rather than regression.
 
-yesno_counts_before
+```{r features}
 
-# Manual one-hot encoding:
-# create new flag cols for "Phone Svc" and "Internet Svc" using values in existing cols
+#----------------------
+# 1. Manual one-hot encoding: Internet Service
+#----------------------
 
-glimpse(df_raw)
+# List values 
+df_raw %>% 
+  count(InternetService)
 
+# Create new cols with binary flags
 df_model <- df_raw %>%
-  # create binary flag for phone service
-  mutate(Phone_Svc = if_else(PhoneService == "Yes", 1, 0)) %>%  
-  # create binary flags for internet service and type
   mutate(Internet_Svc = if_else(InternetService == "No", 0, 1),
          DSL    = if_else(InternetService == "DSL", 1, 0),
          Fiber  = if_else(InternetService == "Fiber optic", 1, 0))
 
-# verify new cols
+# Compare new cols to original
 df_model %>% 
   count(InternetService, Internet_Svc, DSL,Fiber)
-df_model %>% 
-  count(PhoneService, MultipleLines, Phone_Svc)
 
-# remove old columns
+# Remove original column
 df_model <- df_model %>% 
-  select(-InternetService, -PhoneService)
-  
-# One-Hot encoding using package (gender, contract, and payment types)
+  select(-InternetService)
 
-# gender
+#----------------------
+# 2. Automated one-hot encoding: gender, contract, payment types
+#----------------------
+
+# List values for each column
 df_model %>% 
   count(gender)
 
-# contract
 df_model %>%
   count(Contract)
 
-# payment type
 df_model %>%
   count(PaymentMethod)
 
+# One-hot encoding, removing original columns
 df_model <- df_model %>%
   dummy_cols(
     select_columns = c("PaymentMethod", "Contract", "gender"),
     remove_selected_columns = TRUE
   )
 
-# Clean up all binary flags to 0/1 (treat "No service" as 0)
+#----------------------
+# 3. Convert remaining binary flags to 0/1 (treat "No service" as 0)
+#----------------------
+
 df_model <- df_model %>% 
-    mutate(MultipleLines = if_else(MultipleLines == "Yes", 1, 0),
+    mutate(Phone_Service = if_else(PhoneService == "Yes", 1, 0),
+           MultipleLines = if_else(MultipleLines == "Yes", 1, 0),
            OnlineSecurity = if_else(OnlineSecurity == "Yes", 1, 0),
            OnlineBackup = if_else(OnlineBackup == "Yes", 1, 0),
            DeviceProtection = if_else(DeviceProtection == "Yes", 1, 0),
@@ -118,30 +135,22 @@ df_model <- df_model %>%
 
 glimpse(df_model)
 
-# New values in flag cols
+#----------------------
+# Convert target variable to factor
+#----------------------
 
-yesno_cols_after <- c("Partner", "Dependents", "MultipleLines",
-                      "OnlineSecurity", "OnlineBackup", "DeviceProtection",
-                      "TechSupport", "StreamingTV", "StreamingMovies",
-                      "PaperlessBilling", "Churn","Phone_Svc", "Internet_Svc",
-                      "DSL","Fiber")
-
-yesno_counts_after <- df_model %>%
-  select(all_of(yesno_cols_after)) %>%
-  pivot_longer(cols = everything(), names_to = "variable", values_to = "value") %>%
-  count(variable, value) %>%
-  arrange(variable, desc(n)) %>% 
-  pivot_wider(names_from = value, values_from = n) %>% 
-  mutate(pct_yes = `1`/(`0`+`1`))
-
-yesno_counts_after
-
-# convert target variable to factor
 df_model$Churn <- as.factor(df_model$Churn)
+
+#----------------------
+# Final dataframe 
+#----------------------
 
 glimpse(df_model)
 
-# summarize for paper
+#----------------------
+# Summary stats for essay 
+#----------------------
+
 summary_stats <- df_model %>% 
   summarize(
     `Customers` = n(),
@@ -154,19 +163,24 @@ summary_stats <- df_model %>%
   pivot_longer(cols = everything(), names_to = "Metric", values_to = "Value")
 
 summary_stats 
+```
+  
+## Modeling Preparation: Train/Test Data
+  
+### Initialize results matrix and create train/test split
+  
+A matrix is initialized to store metrics for each of our four models, and the dataset is split 70/30 into train and test data using a fixed seed for reproducibility. Customer ID was removed. The train and test data was compared to ensure the same one-hot encoded columns appeared in both, and those columns were renamed to avoid issues with special characters.
 
-#-----------------------------------
-# Modeling Preparation: Train/Test Data
-#-----------------------------------
+```{r train_test}
 
-# initialize matrix to store metrics for all models
+# Initialize matrix to store metrics 
 model_results <- matrix(nrow = 4, ncol = 7,
                         dimnames = list(
                           c("RF_default", "RF_tuned", "NN_simple", "NN_deep"),
                           c("Accuracy", "Precision", "Recall", "F1", "AUC", "Sensitivity","Specificity")
                         ))
 
-# Train/test split 70/30
+# Train/test split 
 set.seed(123)
 
 train_index <- sample(nrow(df_model), 0.7 * nrow(df_model))
@@ -177,57 +191,63 @@ df_test  <- df_model[-train_index, ]
 df_train <- df_train %>% select(-customerID)
 df_test  <- df_test %>% select(-customerID)
 
-# Make sure df_test has the same columns as df_train
+# Add any missing one-hot encoded cols to df_test 
 missing_cols <- setdiff(names(df_train), names(df_test))
 df_test[missing_cols] <- 0
 df_test <- df_test[, names(df_train)]
 
+# Add any missing one-hot encoded cols to df_train 
 missing_cols_rev <- setdiff(names(df_test), names(df_train))
 df_train[missing_cols_rev] <- 0
 df_train <- df_train[, names(df_test)]
 
-# fix names with special characters for random forest (one hot encoded)
+# Fix col names with special characters (i.e. one hot encoded cols)
 names(df_train) <- make.names(names(df_train))
 names(df_test) <- make.names(names(df_test))
+```
+  
+## Model #1: Random Forest with Default Parameters
+  
+The first model was a random forest with default parameters and 500 trees, with metrics stored in the results matrix. 
 
-#-----------------------------------
-# Model #1: random forest default parameters
-#-----------------------------------
+```{r rf_default}
 
-# Default Random Forest (note: exclude customerID from predictors)
-rf_model <- randomForest(Churn ~ ., 
+# Train Random Forest
+rf_default_model <- randomForest(Churn ~ ., 
                          data = df_train, 
                          ntree = 500, 
                          importance = TRUE)
 
 # Get predictions and probabilities
-rf_preds <- predict(rf_model, newdata = df_test)
-rf_probs <- predict(rf_model, newdata = df_test, type = "prob")[, 2]
+rf_default_preds <- predict(rf_default_model, newdata = df_test)
+rf_default_probs <- predict(rf_default_model, newdata = df_test, type = "prob")[, 2]
 
-# Confusion matrix
-cm <- confusionMatrix(rf_preds, df_test$Churn, positive = "1")
-cm
+# Confusion matrix using predictions
+rf_default_cm <- confusionMatrix(rf_default_preds, df_test$Churn, positive = "1")
+rf_default_cm
 
-# AUC
-rf_roc <- roc(df_test$Churn, rf_probs)
-rf_auc <- auc(rf_roc)
+# Calculate AUC using probabilities
+rf_default_roc <- roc(df_test$Churn, rf_default_probs)
+rf_default_auc <- auc(rf_default_roc)
 
-# Store values in matrix
-model_results["RF_default", "Accuracy"]  <- cm$overall["Accuracy"]
-model_results["RF_default", "Precision"] <- cm$byClass["Precision"]
-model_results["RF_default", "Recall"]    <- cm$byClass["Recall"]
-model_results["RF_default", "F1"]        <- cm$byClass["F1"]
-model_results["RF_default", "AUC"]       <- rf_auc
-model_results["RF_default", "Sensitivity"] <- rf_tuned_cm$byClass["Sensitivity"]
-model_results["RF_tuned", "Specificity"] <- rf_tuned_cm$byClass["Specificity"]
+# Store results from confusion matrix and AUC 
+model_results["RF_default", "Accuracy"]  <- rf_default_cm$overall["Accuracy"]
+model_results["RF_default", "Precision"] <- rf_default_cm$byClass["Precision"]
+model_results["RF_default", "Recall"]    <- rf_default_cm$byClass["Recall"]
+model_results["RF_default", "F1"]        <- rf_default_cm$byClass["F1"]
+model_results["RF_default", "AUC"]       <- rf_default_auc
+model_results["RF_default", "Sensitivity"] <- rf_default_cm$byClass["Sensitivity"]
+model_results["RF_tuned", "Specificity"] <- rf_default_cm$byClass["Specificity"]
 
-
+# View results matrix
 model_results
+```
+  
+# Model #2: Random Forest with Tuned Parameters
+  
+To improve upon the first model, five-fold cross-validation was used to optimize the mtry value, and results again stored in the results matrix.   
 
-
-#-----------------------------------
-# Model #2: random forest tuned parameters
-#-----------------------------------
+```{r rf_tuned}
 
 # Train with 5-fold cross-validation for mtry value
 set.seed(42)
@@ -240,16 +260,19 @@ rf_tuned <- train(
   tuneLength = 5
 )
 
-# Predictions
+# Get predictions and probabilities
 rf_tuned_preds <- predict(rf_tuned, newdata = df_test)
 rf_tuned_probs <- predict(rf_tuned, newdata = df_test, type = "prob")[, 2]
 
-# Evaluation
+# Confusion matrix using predictions
 rf_tuned_cm <- confusionMatrix(rf_tuned_preds, df_test$Churn, positive = "1")
+rf_tuned_cm
+
+# Calculate AUC using probabilities
 rf_tuned_roc <- roc(df_test$Churn, rf_tuned_probs)
 rf_tuned_auc <- auc(rf_tuned_roc)
 
-# Store in matrix
+# Store results from CM and AUC in matrix
 model_results["RF_tuned", "Accuracy"]    <- rf_tuned_cm$overall["Accuracy"]
 model_results["RF_tuned", "Precision"]   <- rf_tuned_cm$byClass["Precision"]
 model_results["RF_tuned", "Recall"]      <- rf_tuned_cm$byClass["Recall"]
@@ -258,12 +281,13 @@ model_results["RF_tuned", "AUC"]         <- rf_tuned_auc
 model_results["RF_tuned", "Sensitivity"] <- rf_tuned_cm$byClass["Sensitivity"]
 model_results["RF_tuned", "Specificity"] <- rf_tuned_cm$byClass["Specificity"]
 
-# View
+# View updated matrix
 model_results
+```
+  
+# Model #3: Simple Neural Network
 
-#-----------------------------------
-# Model #3: simple NN
-#-----------------------------------
+
 
 # Convert Churn back to numeric 
 y_train <- as.numeric(df_train$Churn)
