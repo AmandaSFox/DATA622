@@ -465,16 +465,15 @@ df_raw &lt;- df_raw %&gt;%
 </div>
 <div id="feature-engineering-and-transformation" class="section level2">
 <h2>Feature Engineering and Transformation</h2>
-<div id="standardize-flags-to-numeric-01-and-extract-service-type-details" class="section level3">
-<h3>Standardize flags to numeric 0/1 and extract service type
-details</h3>
+<div id="standardize-flags-to-01-and-extract-service-details-with-one-hot-encoding" class="section level3">
+<h3>Standardize flags to 0/1 and extract service details with one-hot
+encoding</h3>
 <p>The dataset includes character flags which are transformed to numeric
-(0/1) as required by neural networks. One-hot encoding was used for four
+as required by neural networks. One-hot encoding is used for four
 columns with &gt;2 values to preserve information about service types,
-and the remaining binary columns were converted to 0/1 numeric
-columns.</p>
-<p>Finally, the target variable is transformed to a factor to force the
-random forest models to classification rather than regression.</p>
+and then the remaining binary Yes/No columns are simply converted to
+0/1. Finally, the target variable is transformed to a factor to force
+the random forest models to classification rather than regression.</p>
 <pre class="r"><code>#----------------------
 # 1. Manual one-hot encoding: Internet Service
 #----------------------
@@ -604,7 +603,7 @@ glimpse(df_model)</code></pre>
 ## $ gender_Female                             &lt;int&gt; 1, 0, 0, 0, 1, 1, 0, 1, 1, 0…
 ## $ gender_Male                               &lt;int&gt; 0, 1, 1, 1, 0, 0, 1, 0, 0, 1…</code></pre>
 <pre class="r"><code>#----------------------
-# Summary stats for essay 
+# Summary stats for essay
 #----------------------
 
 summary_stats &lt;- df_model %&gt;% 
@@ -637,15 +636,15 @@ summary_stats </code></pre>
 <h3>Initialize results matrix and create train/test split</h3>
 <p>A matrix is initialized to store metrics for each of our four models,
 and the dataset is split 70/30 into train and test data using a fixed
-seed for reproducibility. Customer ID was removed. The train and test
-data was compared to ensure the same one-hot encoded columns appeared in
-both, and those columns were renamed to avoid issues with special
-characters.</p>
+seed for reproducibility. Customer ID is removed and the train and test
+datasets are compared to ensure the same one-hot encoded columns appear
+in both. Finally, column names are fixed to avoid issues with special
+characters in the random forest models.</p>
 <pre class="r"><code># Initialize matrix to store metrics 
-model_results &lt;- matrix(nrow = 4, ncol = 7,
+model_results &lt;- matrix(nrow = 4, ncol = 5,
                         dimnames = list(
                           c(&quot;RF_default&quot;, &quot;RF_tuned&quot;, &quot;NN_simple&quot;, &quot;NN_deep&quot;),
-                          c(&quot;Accuracy&quot;, &quot;Precision&quot;, &quot;Recall&quot;, &quot;F1&quot;, &quot;AUC&quot;, &quot;Sensitivity&quot;,&quot;Specificity&quot;)
+                          c(&quot;Accuracy&quot;, &quot;Precision&quot;, &quot;Recall&quot;, &quot;F1&quot;, &quot;AUC&quot;)
                         ))
 
 # Train/test split 
@@ -676,8 +675,9 @@ names(df_test) &lt;- make.names(names(df_test))</code></pre>
 </div>
 <div id="model-1-random-forest-with-default-parameters" class="section level2">
 <h2>Model #1: Random Forest with Default Parameters</h2>
-<p>The first model was a random forest with default parameters and 500
-trees, with metrics stored in the results matrix.</p>
+<p>The first model is a random forest with default parameters and 500
+trees, with performance metrics calculated and stored in the results
+matrix.</p>
 <pre class="r"><code># Train Random Forest
 rf_default_model &lt;- randomForest(Churn ~ ., 
                          data = df_train, 
@@ -728,21 +728,14 @@ model_results[&quot;RF_default&quot;, &quot;Precision&quot;] &lt;- rf_default_cm
 model_results[&quot;RF_default&quot;, &quot;Recall&quot;]    &lt;- rf_default_cm$byClass[&quot;Recall&quot;]
 model_results[&quot;RF_default&quot;, &quot;F1&quot;]        &lt;- rf_default_cm$byClass[&quot;F1&quot;]
 model_results[&quot;RF_default&quot;, &quot;AUC&quot;]       &lt;- rf_default_auc
-model_results[&quot;RF_default&quot;, &quot;Sensitivity&quot;] &lt;- rf_default_cm$byClass[&quot;Sensitivity&quot;]
-model_results[&quot;RF_default&quot;, &quot;Specificity&quot;] &lt;- rf_default_cm$byClass[&quot;Specificity&quot;]
 
 # View results matrix
 model_results</code></pre>
-<pre><code>##             Accuracy Precision    Recall        F1       AUC Sensitivity
-## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123   0.4803571
-## RF_tuned          NA        NA        NA        NA        NA          NA
-## NN_simple         NA        NA        NA        NA        NA          NA
-## NN_deep           NA        NA        NA        NA        NA          NA
-##            Specificity
-## RF_default   0.9109677
-## RF_tuned            NA
-## NN_simple           NA
-## NN_deep             NA</code></pre>
+<pre><code>##             Accuracy Precision    Recall        F1       AUC
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123
+## RF_tuned          NA        NA        NA        NA        NA
+## NN_simple         NA        NA        NA        NA        NA
+## NN_deep           NA        NA        NA        NA        NA</code></pre>
 </div>
 <div id="model-2-random-forest-with-tuned-parameters" class="section level1">
 <h1>Model #2: Random Forest with Tuned Parameters</h1>
@@ -805,21 +798,14 @@ model_results[&quot;RF_tuned&quot;, &quot;Precision&quot;]   &lt;- rf_tuned_cm$b
 model_results[&quot;RF_tuned&quot;, &quot;Recall&quot;]      &lt;- rf_tuned_cm$byClass[&quot;Recall&quot;]
 model_results[&quot;RF_tuned&quot;, &quot;F1&quot;]          &lt;- rf_tuned_cm$byClass[&quot;F1&quot;]
 model_results[&quot;RF_tuned&quot;, &quot;AUC&quot;]         &lt;- rf_tuned_auc
-model_results[&quot;RF_tuned&quot;, &quot;Sensitivity&quot;] &lt;- rf_tuned_cm$byClass[&quot;Sensitivity&quot;]
-model_results[&quot;RF_tuned&quot;, &quot;Specificity&quot;] &lt;- rf_tuned_cm$byClass[&quot;Specificity&quot;]
 
 # View updated matrix
 model_results</code></pre>
-<pre><code>##             Accuracy Precision    Recall        F1       AUC Sensitivity
-## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123   0.4803571
-## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652   0.4750000
-## NN_simple         NA        NA        NA        NA        NA          NA
-## NN_deep           NA        NA        NA        NA        NA          NA
-##            Specificity
-## RF_default   0.9109677
-## RF_tuned     0.9419355
-## NN_simple           NA
-## NN_deep             NA</code></pre>
+<pre><code>##             Accuracy Precision    Recall        F1       AUC
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123
+## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652
+## NN_simple         NA        NA        NA        NA        NA
+## NN_deep           NA        NA        NA        NA        NA</code></pre>
 </div>
 <div id="model-3-simple-neural-network" class="section level1">
 <h1>Model #3: Simple Neural Network</h1>
@@ -854,21 +840,54 @@ model_results[&quot;NN_simple&quot;, &quot;Precision&quot;]    &lt;- nn_simple_c
 model_results[&quot;NN_simple&quot;, &quot;Recall&quot;]       &lt;- nn_simple_cm$byClass[&quot;Recall&quot;]
 model_results[&quot;NN_simple&quot;, &quot;F1&quot;]           &lt;- nn_simple_cm$byClass[&quot;F1&quot;]
 model_results[&quot;NN_simple&quot;, &quot;AUC&quot;]          &lt;- NA  
-model_results[&quot;NN_simple&quot;, &quot;Sensitivity&quot;]  &lt;- nn_simple_cm$byClass[&quot;Sensitivity&quot;]
-model_results[&quot;NN_simple&quot;, &quot;Specificity&quot;]  &lt;- nn_simple_cm$byClass[&quot;Specificity&quot;]
 
 # Display updated metrics
 model_results</code></pre>
-<pre><code>##             Accuracy Precision    Recall        F1       AUC Sensitivity
-## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123   0.4803571
-## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652   0.4750000
-## NN_simple  0.8099526 0.7002519 0.4964286 0.5809822        NA   0.4964286
-## NN_deep           NA        NA        NA        NA        NA          NA
-##            Specificity
-## RF_default   0.9109677
-## RF_tuned     0.9419355
-## NN_simple    0.9232258
-## NN_deep             NA</code></pre>
+<pre><code>##             Accuracy Precision    Recall        F1       AUC
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123
+## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652
+## NN_simple  0.8099526 0.7002519 0.4964286 0.5809822        NA
+## NN_deep           NA        NA        NA        NA        NA</code></pre>
+</div>
+<div id="model-4-deep-neural-network" class="section level1">
+<h1>Model #4: Deep Neural Network</h1>
+<p>Finally, a deep feedforward neural network with ten hidden units and
+stronger regularization is created in an attempt to improve the
+still-poor recall performance.</p>
+<pre class="r"><code># Fit neural network with 10 hidden units and stronger regularization
+nn_deep &lt;- nnet(
+  Churn ~ .,
+  data = df_train,
+  size = 10,       
+  decay = 0.05,    
+  maxit = 300,
+  trace = FALSE
+)
+
+# Predict on test data without the &quot;Churn&quot; column
+nn_deep_preds &lt;- predict(nn_deep, df_test %&gt;% select(-Churn), type = &quot;class&quot;)
+
+# Confusion matrix
+nn_deep_cm &lt;- confusionMatrix(
+  factor(nn_deep_preds, levels = c(0, 1)),
+  df_test$Churn,
+  positive = &quot;1&quot;
+)
+
+# Store metrics
+model_results[&quot;NN_deep&quot;, &quot;Accuracy&quot;]     &lt;- nn_deep_cm$overall[&quot;Accuracy&quot;]
+model_results[&quot;NN_deep&quot;, &quot;Precision&quot;]    &lt;- nn_deep_cm$byClass[&quot;Precision&quot;]
+model_results[&quot;NN_deep&quot;, &quot;Recall&quot;]       &lt;- nn_deep_cm$byClass[&quot;Recall&quot;]
+model_results[&quot;NN_deep&quot;, &quot;F1&quot;]           &lt;- nn_deep_cm$byClass[&quot;F1&quot;]
+model_results[&quot;NN_deep&quot;, &quot;AUC&quot;]          &lt;- NA  # no raw probs available
+
+# Display updated metrics
+model_results</code></pre>
+<pre><code>##             Accuracy Precision    Recall        F1       AUC
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123
+## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652
+## NN_simple  0.8099526 0.7002519 0.4964286 0.5809822        NA
+## NN_deep    0.8104265 0.6913876 0.5160714 0.5910020        NA</code></pre>
 </div>
 
 

@@ -170,10 +170,10 @@ A matrix is initialized to store metrics for each of our four models, and the da
 ```{r train_test}
 
 # Initialize matrix to store metrics 
-model_results <- matrix(nrow = 4, ncol = 7,
+model_results <- matrix(nrow = 4, ncol = 5,
                         dimnames = list(
                           c("RF_default", "RF_tuned", "NN_simple", "NN_deep"),
-                          c("Accuracy", "Precision", "Recall", "F1", "AUC", "Sensitivity","Specificity")
+                          c("Accuracy", "Precision", "Recall", "F1", "AUC")
                         ))
 
 # Train/test split 
@@ -204,7 +204,7 @@ names(df_test) <- make.names(names(df_test))
   
 ## Model #1: Random Forest with Default Parameters
   
-The first model was a random forest with default parameters and 500 trees, with metrics stored in the results matrix. 
+The first model is a random forest with default parameters and 500 trees, with performance metrics calculated and stored in the results matrix. 
 
 ```{r rf_default, message=FALSE, warning=FALSE}
 
@@ -232,8 +232,6 @@ model_results["RF_default", "Precision"] <- rf_default_cm$byClass["Precision"]
 model_results["RF_default", "Recall"]    <- rf_default_cm$byClass["Recall"]
 model_results["RF_default", "F1"]        <- rf_default_cm$byClass["F1"]
 model_results["RF_default", "AUC"]       <- rf_default_auc
-model_results["RF_default", "Sensitivity"] <- rf_default_cm$byClass["Sensitivity"]
-model_results["RF_default", "Specificity"] <- rf_default_cm$byClass["Specificity"]
 
 # View results matrix
 model_results
@@ -274,8 +272,6 @@ model_results["RF_tuned", "Precision"]   <- rf_tuned_cm$byClass["Precision"]
 model_results["RF_tuned", "Recall"]      <- rf_tuned_cm$byClass["Recall"]
 model_results["RF_tuned", "F1"]          <- rf_tuned_cm$byClass["F1"]
 model_results["RF_tuned", "AUC"]         <- rf_tuned_auc
-model_results["RF_tuned", "Sensitivity"] <- rf_tuned_cm$byClass["Sensitivity"]
-model_results["RF_tuned", "Specificity"] <- rf_tuned_cm$byClass["Specificity"]
 
 # View updated matrix
 model_results
@@ -306,8 +302,9 @@ nn_simple_preds <- predict(nn_simple,
 nn_simple_cm <- confusionMatrix(
   factor(nn_simple_preds, levels = c(0, 1)),
   df_test$Churn,
-  positive = "1"
-)
+  positive = "1")
+
+nn_simple_cm
 
 # Store results from CM in matrix
 model_results["NN_simple", "Accuracy"]     <- nn_simple_cm$overall["Accuracy"]
@@ -315,13 +312,45 @@ model_results["NN_simple", "Precision"]    <- nn_simple_cm$byClass["Precision"]
 model_results["NN_simple", "Recall"]       <- nn_simple_cm$byClass["Recall"]
 model_results["NN_simple", "F1"]           <- nn_simple_cm$byClass["F1"]
 model_results["NN_simple", "AUC"]          <- NA  
-model_results["NN_simple", "Sensitivity"]  <- nn_simple_cm$byClass["Sensitivity"]
-model_results["NN_simple", "Specificity"]  <- nn_simple_cm$byClass["Specificity"]
 
 # Display updated metrics
 model_results
 ```
   
-# Model #4: Simple Neural Network
-  
-Next, a simple feedforward neural network with five hidden units was created using the nnet package. Multiple metrics were again evaluated and the results stored in the results matrix.
+# Model #4: Deep Neural Network
+
+Finally, a deep feedforward neural network with ten hidden units and stronger regularization is created in an attempt to improve the still-poor recall performance. 
+
+``` {r nn_deep}
+
+# Fit neural network with 10 hidden units and stronger regularization
+nn_deep <- nnet(
+  Churn ~ .,
+  data = df_train,
+  size = 10,       
+  decay = 0.05,    
+  maxit = 300,
+  trace = FALSE
+)
+
+# Predict on test data without the "Churn" column
+nn_deep_preds <- predict(nn_deep, df_test %>% select(-Churn), type = "class")
+
+# Confusion matrix
+nn_deep_cm <- confusionMatrix(
+  factor(nn_deep_preds, levels = c(0, 1)),
+  df_test$Churn,
+  positive = "1")
+
+nn_deep_cm
+
+# Store metrics
+model_results["NN_deep", "Accuracy"]     <- nn_deep_cm$overall["Accuracy"]
+model_results["NN_deep", "Precision"]    <- nn_deep_cm$byClass["Precision"]
+model_results["NN_deep", "Recall"]       <- nn_deep_cm$byClass["Recall"]
+model_results["NN_deep", "F1"]           <- nn_deep_cm$byClass["F1"]
+model_results["NN_deep", "AUC"]          <- NA  # no raw probs available
+
+# Display updated metrics
+model_results
+```
