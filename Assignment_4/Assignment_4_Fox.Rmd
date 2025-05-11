@@ -64,11 +64,9 @@ df_raw <- df_raw %>%
   
 ## Feature Engineering and Transformation
   
-### Standardize flags to numeric 0/1 and extract service type details 
+### Standardize flags to 0/1 and extract service details with one-hot encoding 
   
-The dataset includes character flags which are transformed to numeric (0/1) as required by neural networks. One-hot encoding was used for four columns with >2 values to preserve information about service types, and the remaining binary columns were converted to 0/1 numeric columns. 
-
-Finally, the target variable is transformed to a factor to force the random forest models to classification rather than regression.
+The dataset includes character flags which are transformed to numeric as required by neural networks. One-hot encoding is used for four columns with >2 values to preserve information about service types, and then the remaining binary Yes/No columns are simply converted to 0/1. Finally, the target variable is transformed to a factor to force the random forest models to classification rather than regression.
 
 ```{r features}
 
@@ -120,7 +118,7 @@ df_model <- df_model %>%
 #----------------------
 
 df_model <- df_model %>% 
-    mutate(Phone_Service = if_else(PhoneService == "Yes", 1, 0),
+    mutate(PhoneService = if_else(PhoneService == "Yes", 1, 0),
            MultipleLines = if_else(MultipleLines == "Yes", 1, 0),
            OnlineSecurity = if_else(OnlineSecurity == "Yes", 1, 0),
            OnlineBackup = if_else(OnlineBackup == "Yes", 1, 0),
@@ -132,8 +130,6 @@ df_model <- df_model %>%
            Dependents = if_else(Dependents == "Yes", 1, 0),
            PaperlessBilling = if_else(PaperlessBilling == "Yes", 1, 0),
            Churn = if_else(Churn == "Yes", 1, 0))
-
-glimpse(df_model)
 
 #----------------------
 # Convert target variable to factor
@@ -148,7 +144,7 @@ df_model$Churn <- as.factor(df_model$Churn)
 glimpse(df_model)
 
 #----------------------
-# Summary stats for essay 
+# Summary stats for essay
 #----------------------
 
 summary_stats <- df_model %>% 
@@ -158,7 +154,7 @@ summary_stats <- df_model %>%
     `Mean Tenure` = mean(tenure, na.rm = TRUE),
     `Mean Monthly Charges` = mean(MonthlyCharges, na.rm = TRUE),
     `% Month to Month` = mean(`Contract_Month-to-month` == 1), 
-    `% Phone Services` = mean(Phone_Svc == 1),
+    `% Phone Services` = mean(PhoneService == 1),
     `% Internet Services` = mean(Internet_Svc == 1)) %>%
   pivot_longer(cols = everything(), names_to = "Metric", values_to = "Value")
 
@@ -169,7 +165,7 @@ summary_stats
   
 ### Initialize results matrix and create train/test split
   
-A matrix is initialized to store metrics for each of our four models, and the dataset is split 70/30 into train and test data using a fixed seed for reproducibility. Customer ID was removed. The train and test data was compared to ensure the same one-hot encoded columns appeared in both, and those columns were renamed to avoid issues with special characters.
+A matrix is initialized to store metrics for each of our four models, and the dataset is split 70/30 into train and test data using a fixed seed for reproducibility. Customer ID is removed and the train and test datasets are compared to ensure the same one-hot encoded columns appear in both. Finally, column names are fixed to avoid issues with special characters in the random forest models.
 
 ```{r train_test}
 
@@ -210,7 +206,7 @@ names(df_test) <- make.names(names(df_test))
   
 The first model was a random forest with default parameters and 500 trees, with metrics stored in the results matrix. 
 
-```{r rf_default}
+```{r rf_default, message=FALSE, warning=FALSE}
 
 # Train Random Forest
 rf_default_model <- randomForest(Churn ~ ., 
@@ -237,7 +233,7 @@ model_results["RF_default", "Recall"]    <- rf_default_cm$byClass["Recall"]
 model_results["RF_default", "F1"]        <- rf_default_cm$byClass["F1"]
 model_results["RF_default", "AUC"]       <- rf_default_auc
 model_results["RF_default", "Sensitivity"] <- rf_default_cm$byClass["Sensitivity"]
-model_results["RF_tuned", "Specificity"] <- rf_default_cm$byClass["Specificity"]
+model_results["RF_default", "Specificity"] <- rf_default_cm$byClass["Specificity"]
 
 # View results matrix
 model_results
@@ -245,9 +241,9 @@ model_results
   
 # Model #2: Random Forest with Tuned Parameters
   
-To improve upon the first model, five-fold cross-validation was used to optimize the mtry value, and results again stored in the results matrix.   
+To improve upon the first RF model, five-fold cross-validation was used to optimize the mtry value, or the number of predictors randomly selected at each split. Results were again stored in the results matrix for comparison.   
 
-```{r rf_tuned}
+```{r rf_tuned, message=FALSE, warning=FALSE}
 
 # Train with 5-fold cross-validation for mtry value
 set.seed(42)
@@ -286,57 +282,46 @@ model_results
 ```
   
 # Model #3: Simple Neural Network
+  
+Next, a simple feedforward neural network with five hidden units was created using the nnet package. Multiple metrics were again evaluated and the results stored in the results matrix.
 
+``` {r nn_simple}
 
-
-# Convert Churn back to numeric 
-y_train <- as.numeric(df_train$Churn)
-y_test <- as.numeric(df_test$Churn)
-
-# Drop target column and convert to matrix
-x_train <- df_train %>% select(-Churn) %>% as.matrix()
-x_test  <- df_test %>% select(-Churn) %>% as.matrix()
-
-# Build model
-nn_simple <- keras_model_sequential() %>%
-  layer_dense(units = 16, activation = "relu", input_shape = ncol(x_train)) %>%
-  layer_dense(units = 1, activation = "sigmoid")
-
-# Compile
-nn_simple %>% compile(
-  optimizer = "adam",
-  loss = "binary_crossentropy",
-  metrics = "accuracy"
+# Fit simple neural network with 5 hidden units and light regularization
+nn_simple <- nnet(
+  Churn ~ .,
+  data = df_train,
+  size = 5,         
+  decay = 0.01,     
+  maxit = 200,
+  trace = FALSE
 )
 
-# Fit model
-history <- nn_simple %>% fit(
-  x = x_train,
-  y = y_train,
-  epochs = 30,
-  batch_size = 32,
-  validation_split = 0.2,
-  verbose = 0
-)
+# Predict on test data without the "Churn" column
+nn_simple_preds <- predict(nn_simple, 
+                           df_test %>% select(-Churn), 
+                           type = "class")
 
-# Predict
-nn_simple_probs <- predict(nn_simple, x_test)
-nn_simple_preds <- ifelse(nn_simple_probs > 0.5, 1, 0)
-
-# Evaluate
+# Confusion matrix (note: no AUC in nnet)
 nn_simple_cm <- confusionMatrix(
   factor(nn_simple_preds, levels = c(0, 1)),
-  factor(y_test, levels = c(0, 1)),
+  df_test$Churn,
   positive = "1"
 )
-nn_simple_roc <- roc(y_test, nn_simple_probs)
-nn_simple_auc <- auc(nn_simple_roc)
 
-# Store metrics
-model_results["NN_simple", "Accuracy"]    <- nn_simple_cm$overall["Accuracy"]
-model_results["NN_simple", "Precision"]   <- nn_simple_cm$byClass["Precision"]
-model_results["NN_simple", "Recall"]      <- nn_simple_cm$byClass["Recall"]
-model_results["NN_simple", "F1"]          <- nn_simple_cm$byClass["F1"]
-model_results["NN_simple", "AUC"]         <- nn_simple_auc
-model_results["NN_simple", "Sensitivity"] <- nn_simple_cm$byClass["Sensitivity"]
-model_results["NN_simple", "Specificity"] <- nn_simple_cm$byClass["Specificity"]
+# Store results from CM in matrix
+model_results["NN_simple", "Accuracy"]     <- nn_simple_cm$overall["Accuracy"]
+model_results["NN_simple", "Precision"]    <- nn_simple_cm$byClass["Precision"]
+model_results["NN_simple", "Recall"]       <- nn_simple_cm$byClass["Recall"]
+model_results["NN_simple", "F1"]           <- nn_simple_cm$byClass["F1"]
+model_results["NN_simple", "AUC"]          <- NA  
+model_results["NN_simple", "Sensitivity"]  <- nn_simple_cm$byClass["Sensitivity"]
+model_results["NN_simple", "Specificity"]  <- nn_simple_cm$byClass["Specificity"]
+
+# Display updated metrics
+model_results
+```
+  
+# Model #4: Simple Neural Network
+  
+Next, a simple feedforward neural network with five hidden units was created using the nnet package. Multiple metrics were again evaluated and the results stored in the results matrix.

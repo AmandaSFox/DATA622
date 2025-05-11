@@ -470,8 +470,9 @@ df_raw &lt;- df_raw %&gt;%
 details</h3>
 <p>The dataset includes character flags which are transformed to numeric
 (0/1) as required by neural networks. One-hot encoding was used for four
-columns with &gt;2 values to preserve information, and the remaining
-binary columns were converted to 0/1 numeric columns.</p>
+columns with &gt;2 values to preserve information about service types,
+and the remaining binary columns were converted to 0/1 numeric
+columns.</p>
 <p>Finally, the target variable is transformed to a factor to force the
 random forest models to classification rather than regression.</p>
 <pre class="r"><code>#----------------------
@@ -547,7 +548,7 @@ df_model &lt;- df_model %&gt;%
 #----------------------
 
 df_model &lt;- df_model %&gt;% 
-    mutate(Phone_Svc = if_else(PhoneService == &quot;Yes&quot;, 1, 0),
+    mutate(PhoneService = if_else(PhoneService == &quot;Yes&quot;, 1, 0),
            MultipleLines = if_else(MultipleLines == &quot;Yes&quot;, 1, 0),
            OnlineSecurity = if_else(OnlineSecurity == &quot;Yes&quot;, 1, 0),
            OnlineBackup = if_else(OnlineBackup == &quot;Yes&quot;, 1, 0),
@@ -560,40 +561,7 @@ df_model &lt;- df_model %&gt;%
            PaperlessBilling = if_else(PaperlessBilling == &quot;Yes&quot;, 1, 0),
            Churn = if_else(Churn == &quot;Yes&quot;, 1, 0))
 
-glimpse(df_model)</code></pre>
-<pre><code>## Rows: 7,032
-## Columns: 30
-## $ customerID                                &lt;chr&gt; &quot;7590-VHVEG&quot;, &quot;5575-GNVDE&quot;, …
-## $ SeniorCitizen                             &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
-## $ Partner                                   &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 1, 0…
-## $ Dependents                                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 1…
-## $ tenure                                    &lt;dbl&gt; 1, 34, 2, 45, 2, 8, 22, 10, …
-## $ PhoneService                              &lt;chr&gt; &quot;No&quot;, &quot;Yes&quot;, &quot;Yes&quot;, &quot;No&quot;, &quot;Y…
-## $ MultipleLines                             &lt;dbl&gt; 0, 0, 0, 0, 0, 1, 1, 0, 1, 0…
-## $ OnlineSecurity                            &lt;dbl&gt; 0, 1, 1, 1, 0, 0, 0, 1, 0, 1…
-## $ OnlineBackup                              &lt;dbl&gt; 1, 0, 1, 0, 0, 0, 1, 0, 0, 1…
-## $ DeviceProtection                          &lt;dbl&gt; 0, 1, 0, 1, 0, 1, 0, 0, 1, 0…
-## $ TechSupport                               &lt;dbl&gt; 0, 0, 0, 1, 0, 0, 0, 0, 1, 0…
-## $ StreamingTV                               &lt;dbl&gt; 0, 0, 0, 0, 0, 1, 1, 0, 1, 0…
-## $ StreamingMovies                           &lt;dbl&gt; 0, 0, 0, 0, 0, 1, 0, 0, 1, 0…
-## $ PaperlessBilling                          &lt;dbl&gt; 1, 0, 1, 0, 1, 1, 1, 0, 1, 0…
-## $ MonthlyCharges                            &lt;dbl&gt; 29.85, 56.95, 53.85, 42.30, …
-## $ TotalCharges                              &lt;dbl&gt; 29.85, 1889.50, 108.15, 1840…
-## $ Churn                                     &lt;dbl&gt; 0, 0, 1, 0, 1, 1, 0, 0, 1, 0…
-## $ Internet_Svc                              &lt;dbl&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
-## $ DSL                                       &lt;dbl&gt; 1, 1, 1, 1, 0, 0, 0, 1, 0, 1…
-## $ Fiber                                     &lt;dbl&gt; 0, 0, 0, 0, 1, 1, 1, 0, 1, 0…
-## $ `PaymentMethod_Bank transfer (automatic)` &lt;int&gt; 0, 0, 0, 1, 0, 0, 0, 0, 0, 1…
-## $ `PaymentMethod_Credit card (automatic)`   &lt;int&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0…
-## $ `PaymentMethod_Electronic check`          &lt;int&gt; 1, 0, 0, 0, 1, 1, 0, 0, 1, 0…
-## $ `PaymentMethod_Mailed check`              &lt;int&gt; 0, 1, 1, 0, 0, 0, 0, 1, 0, 0…
-## $ `Contract_Month-to-month`                 &lt;int&gt; 1, 0, 1, 0, 1, 1, 1, 1, 1, 0…
-## $ `Contract_One year`                       &lt;int&gt; 0, 1, 0, 1, 0, 0, 0, 0, 0, 1…
-## $ `Contract_Two year`                       &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
-## $ gender_Female                             &lt;int&gt; 1, 0, 0, 0, 1, 1, 0, 1, 1, 0…
-## $ gender_Male                               &lt;int&gt; 0, 1, 1, 1, 0, 0, 1, 0, 0, 1…
-## $ Phone_Svc                                 &lt;dbl&gt; 0, 1, 1, 0, 1, 1, 1, 0, 1, 1…</code></pre>
-<pre class="r"><code>#----------------------
+#----------------------
 # Convert target variable to factor
 #----------------------
 
@@ -605,13 +573,13 @@ df_model$Churn &lt;- as.factor(df_model$Churn)
 
 glimpse(df_model)</code></pre>
 <pre><code>## Rows: 7,032
-## Columns: 30
+## Columns: 29
 ## $ customerID                                &lt;chr&gt; &quot;7590-VHVEG&quot;, &quot;5575-GNVDE&quot;, …
 ## $ SeniorCitizen                             &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
 ## $ Partner                                   &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 1, 0…
 ## $ Dependents                                &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 1…
 ## $ tenure                                    &lt;dbl&gt; 1, 34, 2, 45, 2, 8, 22, 10, …
-## $ PhoneService                              &lt;chr&gt; &quot;No&quot;, &quot;Yes&quot;, &quot;Yes&quot;, &quot;No&quot;, &quot;Y…
+## $ PhoneService                              &lt;dbl&gt; 0, 1, 1, 0, 1, 1, 1, 0, 1, 1…
 ## $ MultipleLines                             &lt;dbl&gt; 0, 0, 0, 0, 0, 1, 1, 0, 1, 0…
 ## $ OnlineSecurity                            &lt;dbl&gt; 0, 1, 1, 1, 0, 0, 0, 1, 0, 1…
 ## $ OnlineBackup                              &lt;dbl&gt; 1, 0, 1, 0, 0, 0, 1, 0, 0, 1…
@@ -634,8 +602,7 @@ glimpse(df_model)</code></pre>
 ## $ `Contract_One year`                       &lt;int&gt; 0, 1, 0, 1, 0, 0, 0, 0, 0, 1…
 ## $ `Contract_Two year`                       &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…
 ## $ gender_Female                             &lt;int&gt; 1, 0, 0, 0, 1, 1, 0, 1, 1, 0…
-## $ gender_Male                               &lt;int&gt; 0, 1, 1, 1, 0, 0, 1, 0, 0, 1…
-## $ Phone_Svc                                 &lt;dbl&gt; 0, 1, 1, 0, 1, 1, 1, 0, 1, 1…</code></pre>
+## $ gender_Male                               &lt;int&gt; 0, 1, 1, 1, 0, 0, 1, 0, 0, 1…</code></pre>
 <pre class="r"><code>#----------------------
 # Summary stats for essay 
 #----------------------
@@ -647,7 +614,7 @@ summary_stats &lt;- df_model %&gt;%
     `Mean Tenure` = mean(tenure, na.rm = TRUE),
     `Mean Monthly Charges` = mean(MonthlyCharges, na.rm = TRUE),
     `% Month to Month` = mean(`Contract_Month-to-month` == 1), 
-    `% Phone Services` = mean(Phone_Svc == 1),
+    `% Phone Services` = mean(PhoneService == 1),
     `% Internet Services` = mean(Internet_Svc == 1)) %&gt;%
   pivot_longer(cols = everything(), names_to = &quot;Metric&quot;, values_to = &quot;Value&quot;)
 
@@ -728,34 +695,32 @@ rf_default_cm</code></pre>
 ## 
 ##           Reference
 ## Prediction    0    1
-##          0 1413  292
-##          1  137  268
+##          0 1412  291
+##          1  138  269
 ##                                           
 ##                Accuracy : 0.7967          
 ##                  95% CI : (0.7789, 0.8137)
 ##     No Information Rate : 0.7346          
 ##     P-Value [Acc &gt; NIR] : 1.885e-11       
 ##                                           
-##                   Kappa : 0.428           
+##                   Kappa : 0.4287          
 ##                                           
-##  Mcnemar&#39;s Test P-Value : 1.044e-13       
+##  Mcnemar&#39;s Test P-Value : 2.158e-13       
 ##                                           
-##             Sensitivity : 0.4786          
-##             Specificity : 0.9116          
-##          Pos Pred Value : 0.6617          
-##          Neg Pred Value : 0.8287          
+##             Sensitivity : 0.4804          
+##             Specificity : 0.9110          
+##          Pos Pred Value : 0.6609          
+##          Neg Pred Value : 0.8291          
 ##              Prevalence : 0.2654          
-##          Detection Rate : 0.1270          
-##    Detection Prevalence : 0.1919          
-##       Balanced Accuracy : 0.6951          
+##          Detection Rate : 0.1275          
+##    Detection Prevalence : 0.1929          
+##       Balanced Accuracy : 0.6957          
 ##                                           
 ##        &#39;Positive&#39; Class : 1               
 ## </code></pre>
 <pre class="r"><code># Calculate AUC using probabilities
-rf_default_roc &lt;- roc(df_test$Churn, rf_default_probs)</code></pre>
-<pre><code>## Setting levels: control = 0, case = 1</code></pre>
-<pre><code>## Setting direction: controls &lt; cases</code></pre>
-<pre class="r"><code>rf_default_auc &lt;- auc(rf_default_roc)
+rf_default_roc &lt;- roc(df_test$Churn, rf_default_probs)
+rf_default_auc &lt;- auc(rf_default_roc)
 
 # Store results from confusion matrix and AUC 
 model_results[&quot;RF_default&quot;, &quot;Accuracy&quot;]  &lt;- rf_default_cm$overall[&quot;Accuracy&quot;]
@@ -764,112 +729,146 @@ model_results[&quot;RF_default&quot;, &quot;Recall&quot;]    &lt;- rf_default_cm
 model_results[&quot;RF_default&quot;, &quot;F1&quot;]        &lt;- rf_default_cm$byClass[&quot;F1&quot;]
 model_results[&quot;RF_default&quot;, &quot;AUC&quot;]       &lt;- rf_default_auc
 model_results[&quot;RF_default&quot;, &quot;Sensitivity&quot;] &lt;- rf_default_cm$byClass[&quot;Sensitivity&quot;]
-model_results[&quot;RF_tuned&quot;, &quot;Specificity&quot;] &lt;- rf_default_cm$byClass[&quot;Specificity&quot;]
+model_results[&quot;RF_default&quot;, &quot;Specificity&quot;] &lt;- rf_default_cm$byClass[&quot;Specificity&quot;]
 
 # View results matrix
 model_results</code></pre>
 <pre><code>##             Accuracy Precision    Recall        F1       AUC Sensitivity
-## RF_default 0.7966825 0.6617284 0.4785714 0.5554404 0.8434597   0.4785714
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123   0.4803571
 ## RF_tuned          NA        NA        NA        NA        NA          NA
 ## NN_simple         NA        NA        NA        NA        NA          NA
 ## NN_deep           NA        NA        NA        NA        NA          NA
 ##            Specificity
-## RF_default          NA
-## RF_tuned     0.9116129
+## RF_default   0.9109677
+## RF_tuned            NA
 ## NN_simple           NA
 ## NN_deep             NA</code></pre>
 </div>
-<div id="model-2-random-forest-tuned-parameters" class="section level1">
-<h1>Model #2: Random forest tuned parameters</h1>
-<p>#———————————–</p>
+<div id="model-2-random-forest-with-tuned-parameters" class="section level1">
+<h1>Model #2: Random Forest with Tuned Parameters</h1>
+<p>To improve upon the first RF model, five-fold cross-validation was
+used to optimize the mtry value, or the number of predictors randomly
+selected at each split. Results were again stored in the results matrix
+for comparison.</p>
+<pre class="r"><code># Train with 5-fold cross-validation for mtry value
+set.seed(42)
+
+rf_tuned &lt;- train(
+  Churn ~ .,
+  data = df_train,
+  method = &quot;rf&quot;,
+  trControl = trainControl(method = &quot;cv&quot;, number = 5),
+  tuneLength = 5
+)
+
+# Get predictions and probabilities
+rf_tuned_preds &lt;- predict(rf_tuned, newdata = df_test)
+rf_tuned_probs &lt;- predict(rf_tuned, newdata = df_test, type = &quot;prob&quot;)[, 2]
+
+# Confusion matrix using predictions
+rf_tuned_cm &lt;- confusionMatrix(rf_tuned_preds, df_test$Churn, positive = &quot;1&quot;)
+rf_tuned_cm</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    0    1
+##          0 1460  294
+##          1   90  266
+##                                           
+##                Accuracy : 0.818           
+##                  95% CI : (0.8009, 0.8343)
+##     No Information Rate : 0.7346          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.4718          
+##                                           
+##  Mcnemar&#39;s Test P-Value : &lt; 2.2e-16       
+##                                           
+##             Sensitivity : 0.4750          
+##             Specificity : 0.9419          
+##          Pos Pred Value : 0.7472          
+##          Neg Pred Value : 0.8324          
+##              Prevalence : 0.2654          
+##          Detection Rate : 0.1261          
+##    Detection Prevalence : 0.1687          
+##       Balanced Accuracy : 0.7085          
+##                                           
+##        &#39;Positive&#39; Class : 1               
+## </code></pre>
+<pre class="r"><code># Calculate AUC using probabilities
+rf_tuned_roc &lt;- roc(df_test$Churn, rf_tuned_probs)
+rf_tuned_auc &lt;- auc(rf_tuned_roc)
+
+# Store results from CM and AUC in matrix
+model_results[&quot;RF_tuned&quot;, &quot;Accuracy&quot;]    &lt;- rf_tuned_cm$overall[&quot;Accuracy&quot;]
+model_results[&quot;RF_tuned&quot;, &quot;Precision&quot;]   &lt;- rf_tuned_cm$byClass[&quot;Precision&quot;]
+model_results[&quot;RF_tuned&quot;, &quot;Recall&quot;]      &lt;- rf_tuned_cm$byClass[&quot;Recall&quot;]
+model_results[&quot;RF_tuned&quot;, &quot;F1&quot;]          &lt;- rf_tuned_cm$byClass[&quot;F1&quot;]
+model_results[&quot;RF_tuned&quot;, &quot;AUC&quot;]         &lt;- rf_tuned_auc
+model_results[&quot;RF_tuned&quot;, &quot;Sensitivity&quot;] &lt;- rf_tuned_cm$byClass[&quot;Sensitivity&quot;]
+model_results[&quot;RF_tuned&quot;, &quot;Specificity&quot;] &lt;- rf_tuned_cm$byClass[&quot;Specificity&quot;]
+
+# View updated matrix
+model_results</code></pre>
+<pre><code>##             Accuracy Precision    Recall        F1       AUC Sensitivity
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123   0.4803571
+## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652   0.4750000
+## NN_simple         NA        NA        NA        NA        NA          NA
+## NN_deep           NA        NA        NA        NA        NA          NA
+##            Specificity
+## RF_default   0.9109677
+## RF_tuned     0.9419355
+## NN_simple           NA
+## NN_deep             NA</code></pre>
 </div>
-<div id="train-with-5-fold-cross-validation-for-mtry-value" class="section level1">
-<h1>Train with 5-fold cross-validation for mtry value</h1>
-<p>set.seed(42)</p>
-<p>rf_tuned &lt;- train( Churn ~ ., data = df_train, method = “rf”,
-trControl = trainControl(method = “cv”, number = 5), tuneLength = 5
-)</p>
-</div>
-<div id="predictions" class="section level1">
-<h1>Predictions</h1>
-<p>rf_tuned_preds &lt;- predict(rf_tuned, newdata = df_test)
-rf_tuned_probs &lt;- predict(rf_tuned, newdata = df_test, type =
-“prob”)[, 2]</p>
-</div>
-<div id="evaluation" class="section level1">
-<h1>Evaluation</h1>
-<p>rf_tuned_cm &lt;- confusionMatrix(rf_tuned_preds, df_test<span class="math inline">\(Churn, positive = &quot;1&quot;)
-rf_tuned_roc &lt;- roc(df_test\)</span>Churn, rf_tuned_probs)
-rf_tuned_auc &lt;- auc(rf_tuned_roc)</p>
-</div>
-<div id="store-in-matrix" class="section level1">
-<h1>Store in matrix</h1>
-<p>model_results[“RF_tuned”, “Accuracy”] &lt;- rf_tuned_cm<span class="math inline">\(overall[&quot;Accuracy&quot;]
-model_results[&quot;RF_tuned&quot;, &quot;Precision&quot;]   &lt;-
-rf_tuned_cm\)</span>byClass[“Precision”] model_results[“RF_tuned”,
-“Recall”] &lt;- rf_tuned_cm<span class="math inline">\(byClass[&quot;Recall&quot;]
-model_results[&quot;RF_tuned&quot;, &quot;F1&quot;]          &lt;-
-rf_tuned_cm\)</span>byClass[“F1”] model_results[“RF_tuned”, “AUC”] &lt;-
-rf_tuned_auc model_results[“RF_tuned”, “Sensitivity”] &lt;-
-rf_tuned_cm<span class="math inline">\(byClass[&quot;Sensitivity&quot;]
-model_results[&quot;RF_tuned&quot;, &quot;Specificity&quot;] &lt;-
-rf_tuned_cm\)</span>byClass[“Specificity”]</p>
-</div>
-<div id="view" class="section level1">
-<h1>View</h1>
-<p>model_results</p>
-<p>#———————————– # Model #3: simple NN #———————————–</p>
-</div>
-<div id="convert-churn-back-to-numeric" class="section level1">
-<h1>Convert Churn back to numeric</h1>
-<p>y_train &lt;- as.numeric(df_train<span class="math inline">\(Churn)
-y_test &lt;- as.numeric(df_test\)</span>Churn)</p>
-</div>
-<div id="drop-target-column-and-convert-to-matrix" class="section level1">
-<h1>Drop target column and convert to matrix</h1>
-<p>x_train &lt;- df_train %&gt;% select(-Churn) %&gt;% as.matrix()
-x_test &lt;- df_test %&gt;% select(-Churn) %&gt;% as.matrix()</p>
-</div>
-<div id="build-model" class="section level1">
-<h1>Build model</h1>
-<p>nn_simple &lt;- keras_model_sequential() %&gt;% layer_dense(units =
-16, activation = “relu”, input_shape = ncol(x_train)) %&gt;%
-layer_dense(units = 1, activation = “sigmoid”)</p>
-</div>
-<div id="compile" class="section level1">
-<h1>Compile</h1>
-<p>nn_simple %&gt;% compile( optimizer = “adam”, loss =
-“binary_crossentropy”, metrics = “accuracy” )</p>
-</div>
-<div id="fit-model" class="section level1">
-<h1>Fit model</h1>
-<p>history &lt;- nn_simple %&gt;% fit( x = x_train, y = y_train, epochs
-= 30, batch_size = 32, validation_split = 0.2, verbose = 0 )</p>
-</div>
-<div id="predict" class="section level1">
-<h1>Predict</h1>
-<p>nn_simple_probs &lt;- predict(nn_simple, x_test) nn_simple_preds
-&lt;- ifelse(nn_simple_probs &gt; 0.5, 1, 0)</p>
-</div>
-<div id="evaluate" class="section level1">
-<h1>Evaluate</h1>
-<p>nn_simple_cm &lt;- confusionMatrix( factor(nn_simple_preds, levels =
-c(0, 1)), factor(y_test, levels = c(0, 1)), positive = “1” )
-nn_simple_roc &lt;- roc(y_test, nn_simple_probs) nn_simple_auc &lt;-
-auc(nn_simple_roc)</p>
-</div>
-<div id="store-metrics" class="section level1">
-<h1>Store metrics</h1>
-<p>model_results[“NN_simple”, “Accuracy”] &lt;- nn_simple_cm<span class="math inline">\(overall[&quot;Accuracy&quot;]
-model_results[&quot;NN_simple&quot;, &quot;Precision&quot;]   &lt;-
-nn_simple_cm\)</span>byClass[“Precision”] model_results[“NN_simple”,
-“Recall”] &lt;- nn_simple_cm<span class="math inline">\(byClass[&quot;Recall&quot;]
-model_results[&quot;NN_simple&quot;, &quot;F1&quot;]          &lt;-
-nn_simple_cm\)</span>byClass[“F1”] model_results[“NN_simple”, “AUC”]
-&lt;- nn_simple_auc model_results[“NN_simple”, “Sensitivity”] &lt;-
-nn_simple_cm<span class="math inline">\(byClass[&quot;Sensitivity&quot;]
-model_results[&quot;NN_simple&quot;, &quot;Specificity&quot;] &lt;-
-nn_simple_cm\)</span>byClass[“Specificity”]</p>
+<div id="model-3-simple-neural-network" class="section level1">
+<h1>Model #3: Simple Neural Network</h1>
+<p>Next, a simple feedforward neural network with five hidden units was
+created using the nnet package. Multiple metrics were again evaluated
+and the results stored in the results matrix.</p>
+<pre class="r"><code># Fit simple neural network with 5 hidden units and light regularization
+nn_simple &lt;- nnet(
+  Churn ~ .,
+  data = df_train,
+  size = 5,         
+  decay = 0.01,     
+  maxit = 200,
+  trace = FALSE
+)
+
+# Predict on test data without the &quot;Churn&quot; column
+nn_simple_preds &lt;- predict(nn_simple, 
+                           df_test %&gt;% select(-Churn), 
+                           type = &quot;class&quot;)
+
+# Confusion matrix (note: no AUC in nnet)
+nn_simple_cm &lt;- confusionMatrix(
+  factor(nn_simple_preds, levels = c(0, 1)),
+  df_test$Churn,
+  positive = &quot;1&quot;
+)
+
+# Store results from CM in matrix
+model_results[&quot;NN_simple&quot;, &quot;Accuracy&quot;]     &lt;- nn_simple_cm$overall[&quot;Accuracy&quot;]
+model_results[&quot;NN_simple&quot;, &quot;Precision&quot;]    &lt;- nn_simple_cm$byClass[&quot;Precision&quot;]
+model_results[&quot;NN_simple&quot;, &quot;Recall&quot;]       &lt;- nn_simple_cm$byClass[&quot;Recall&quot;]
+model_results[&quot;NN_simple&quot;, &quot;F1&quot;]           &lt;- nn_simple_cm$byClass[&quot;F1&quot;]
+model_results[&quot;NN_simple&quot;, &quot;AUC&quot;]          &lt;- NA  
+model_results[&quot;NN_simple&quot;, &quot;Sensitivity&quot;]  &lt;- nn_simple_cm$byClass[&quot;Sensitivity&quot;]
+model_results[&quot;NN_simple&quot;, &quot;Specificity&quot;]  &lt;- nn_simple_cm$byClass[&quot;Specificity&quot;]
+
+# Display updated metrics
+model_results</code></pre>
+<pre><code>##             Accuracy Precision    Recall        F1       AUC Sensitivity
+## RF_default 0.7966825 0.6609337 0.4803571 0.5563599 0.8426123   0.4803571
+## RF_tuned   0.8180095 0.7471910 0.4750000 0.5807860 0.8523652   0.4750000
+## NN_simple  0.8099526 0.7002519 0.4964286 0.5809822        NA   0.4964286
+## NN_deep           NA        NA        NA        NA        NA          NA
+##            Specificity
+## RF_default   0.9109677
+## RF_tuned     0.9419355
+## NN_simple    0.9232258
+## NN_deep             NA</code></pre>
 </div>
 
 
